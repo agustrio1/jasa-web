@@ -61,8 +61,10 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       ))}
     </div>
 
-    {contentHtml && (
+    {contentHtml ? (
       <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
+    ) : (
+      <p class="mt-8 text-sm text-charcoal/40 italic">Konten belum tersedia.</p>
     )}
 
     {post.faq && Array.isArray(post.faq) && post.faq.length > 0 && (
