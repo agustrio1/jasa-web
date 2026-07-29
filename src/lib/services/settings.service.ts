@@ -17,17 +17,19 @@ export async function getSettings(keys: string[]) {
 }
 
 export async function updateSettings(values: Record<string, string>) {
-  await db.transaction(async (tx) => {
-    for (const [key, value] of Object.entries(values)) {
-      const storedValue = value && ENCRYPTED_KEYS.has(key) ? await encrypt(value) : value;
+  // Ganti db.transaction dengan pemrosesan array Promise secara paralel
+  const promises = Object.entries(values).map(async ([key, value]) => {
+    const storedValue = value && ENCRYPTED_KEYS.has(key) ? await encrypt(value) : value;
 
-      await tx
-        .insert(settings)
-        .values({ key, value: storedValue, updatedAt: new Date() })
-        .onConflictDoUpdate({
-          target: settings.key,
-          set: { value: storedValue, updatedAt: new Date() },
-        });
-    }
+    return db
+      .insert(settings)
+      .values({ key, value: storedValue, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value: storedValue, updatedAt: new Date() },
+      });
   });
+
+  // Tunggu hingga semua request HTTP ke Neon selesai dijalankan
+  await Promise.all(promises);
 }
