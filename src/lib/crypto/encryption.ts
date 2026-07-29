@@ -1,54 +1,32 @@
-import crypto from 'node:crypto';
+const ALGORITHM = 'AES-GCM';
+const IV_LENGTH = 12;
 
-const ALGORITHM = 'aes-256-gcm';
-
-const SECRET = process.env.ENCRYPTION_KEY;
-
-if (!SECRET) {
-  throw new Error('ENCRYPTION_KEY belum diset.');
+async function getKey(): Promise<CryptoKey> {
+  const rawKey = Buffer.from(import.meta.env.ENCRYPTION_KEY, 'base64');
+  return crypto.subtle.importKey('raw', rawKey, ALGORITHM, false, ['encrypt', 'decrypt']);
 }
 
-// Harus menghasilkan 32 byte
-const KEY = crypto.createHash('sha256').update(SECRET).digest();
+export async function encrypt(plainText: string): Promise<string> {
+  const key = await getKey();
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const encoded = new TextEncoder().encode(plainText);
 
-export async function encrypt(text: string): Promise<string> {
-  const iv = crypto.randomBytes(12);
+  const cipherBuffer = await crypto.subtle.encrypt({ name: ALGORITHM, iv }, key, encoded);
 
-  const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
+  const ivBase64 = Buffer.from(iv).toString('base64');
+  const cipherBase64 = Buffer.from(cipherBuffer).toString('base64');
 
-  const encrypted = Buffer.concat([
-    cipher.update(text, 'utf8'),
-    cipher.final(),
-  ]);
-
-  const tag = cipher.getAuthTag();
-
-  return [
-    iv.toString('base64'),
-    tag.toString('base64'),
-    encrypted.toString('base64'),
-  ].join(':');
+  return `${ivBase64}:${cipherBase64}`;
 }
 
-export async function decrypt(payload: string): Promise<string> {
-  const [ivBase64, tagBase64, dataBase64] = payload.split(':');
+export async function decrypt(encryptedText: string): Promise<string> {
+  const [ivBase64, cipherBase64] = encryptedText.split(':');
+  const key = await getKey();
 
-  if (!ivBase64 || !tagBase64 || !dataBase64) {
-    throw new Error('Format data terenkripsi tidak valid.');
-  }
+  const iv = new Uint8Array(Buffer.from(ivBase64, 'base64'));
+  const cipherBuffer = Buffer.from(cipherBase64, 'base64');
 
-  const decipher = crypto.createDecipheriv(
-    ALGORITHM,
-    KEY,
-    Buffer.from(ivBase64, 'base64')
-  );
+  const plainBuffer = await crypto.subtle.decrypt({ name: ALGORITHM, iv }, key, cipherBuffer);
 
-  decipher.setAuthTag(Buffer.from(tagBase64, 'base64'));
-
-  const decrypted = Buffer.concat([
-    decipher.update(Buffer.from(dataBase64, 'base64')),
-    decipher.final(),
-  ]);
-
-  return decrypted.toString('utf8');
+  return new TextDecoder().decode(plainBuffer);
 }
