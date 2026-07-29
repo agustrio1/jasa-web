@@ -32,8 +32,7 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 
 const finalDescription = seo.description || baseDescription;
 
-const rawContent = location?.contentOverride ?? service.content;
-const contentHtml = renderRichContent(rawContent);
+const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
@@ -43,20 +42,11 @@ const jsonLd = serviceJsonLd({
   providerName: 'Nexaro Studio',
 });
 
-Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
 <Layout title={seo.title} description={finalDescription} jsonLd={jsonLd}>
   <section class="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-    <div class="mb-8 rounded-lg border-2 border-red-500 bg-red-50 p-4 text-xs">
-      <p class="font-bold text-red-700">DEBUG (hapus setelah selesai):</p>
-      <p class="mt-2 text-red-700">typeof rawContent: {typeof rawContent}</p>
-      <p class="mt-2 text-red-700">rawContent (raw):</p>
-      <pre class="mt-1 overflow-x-auto whitespace-pre-wrap break-all bg-white p-2 text-charcoal">{JSON.stringify(rawContent)}</pre>
-      <p class="mt-2 text-red-700">contentHtml (hasil render):</p>
-      <pre class="mt-1 overflow-x-auto whitespace-pre-wrap break-all bg-white p-2 text-charcoal">{contentHtml || '(KOSONG)'}</pre>
-    </div>
-
     <h1 class="font-display text-3xl font-semibold text-charcoal sm:text-4xl">
       {location ? `${service.name} ${location.city}` : service.name}
     </h1>

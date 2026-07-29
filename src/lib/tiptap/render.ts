@@ -19,19 +19,21 @@ const EXTENSIONS = [
 ];
 
 export function renderRichContent(content: unknown): string {
-  console.log('renderRichContent INPUT:', JSON.stringify(content));
+  if (!content) return '';
 
-  if (!content || typeof content !== 'object') {
-    console.log('renderRichContent: content bukan object, return empty');
-    return '';
+  // Kalau sudah string HTML biasa, langsung dipakai
+  if (typeof content === 'string') {
+    return content;
   }
 
-  try {
-    const html = generateHTML(content as any, EXTENSIONS);
-    console.log('renderRichContent OUTPUT:', html);
-    return html;
-  } catch (err) {
-    console.log('renderRichContent ERROR:', err);
-    return '';
+  // Kalau object, anggap Tiptap JSON, convert ke HTML
+  if (typeof content === 'object') {
+    try {
+      return generateHTML(content as any, EXTENSIONS);
+    } catch {
+      return '';
+    }
   }
+
+  return '';
 }
