@@ -4,7 +4,6 @@ export const prerender = false;
 import Layout from '@/layouts/Layout.astro';
 import { getServiceBySlug, getServiceLocationBySlug } from '@/lib/services/service.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
-import { renderRichContent } from '@/lib/tiptap/render';
 import { serviceJsonLd } from '@/lib/seo/json-ld';
 
 const { slug } = Astro.params;
@@ -32,8 +31,8 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 
 const finalDescription = seo.description || baseDescription;
 
-// Render data skema JSON menjadi HTML murni
-const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
+// PERBAIKAN: Ambil data string HTML mentah langsung dari DB tanpa parser tambahan
+const contentHtml = location?.contentOverride ?? service.content;
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
@@ -56,10 +55,11 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <p class="mt-4 text-charcoal/60">{finalDescription}</p>
     )}
 
-    {contentHtml ? (
-      <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
+    {/* PERBAIKAN: Render langsung menggunakan komponen bawaan Astro 'set:html' */}
+    {contentHtml && typeof contentHtml === 'string' && contentHtml.trim() ? (
+      <div class="prose prose-sm mt-8 max-w-none text-charcoal/80" set:html={contentHtml} />
     ) : (
-      <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten belum diisi.</p>
+      <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten tidak tersedia.</p>
     )}
 
     {!location && service.locations && service.locations.length > 0 && (

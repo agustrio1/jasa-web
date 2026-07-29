@@ -19,7 +19,12 @@ export default function ServiceForm({ initial }: Props) {
   const [name, setName] = useState(initial?.name ?? '');
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [shortDescription, setShortDescription] = useState(initial?.shortDescription ?? '');
-  const [content, setContent] = useState<unknown>(initial?.content ?? '');
+  
+  // PERBAIKAN: Definisikan tipe state content sebagai string murni untuk menerima payload HTML
+  const [content, setContent] = useState<string>(
+    typeof initial?.content === 'string' ? initial.content : ''
+  );
+  
   const [icon, setIcon] = useState(initial?.icon ?? '');
   const [locations, setLocations] = useState<LocationInput[]>(initial?.locations ?? []);
   const [saving, setSaving] = useState(false);
@@ -57,11 +62,9 @@ export default function ServiceForm({ initial }: Props) {
       if (!res.ok) {
         let errorMessage = 'Gagal menyimpan data';
         try {
-          // Hanya parse JSON jika response dari server valid
           const data = await res.json();
           errorMessage = data.error ?? errorMessage;
         } catch {
-          // Jika server crash 500 berupa HTML/Teks biasa
           errorMessage = `Server Error (${res.status}): ${res.statusText || 'Internal Server Error'}`;
         }
         

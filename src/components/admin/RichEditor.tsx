@@ -9,8 +9,8 @@ import TaskItem from '@tiptap/extension-task-item';
 import { upload } from '@imagekit/javascript';
 
 type Props = {
-  content: unknown;
-  onChange: (json: unknown) => void;
+  content: string;
+  onChange: (html: string) => void;
 };
 
 type ToolbarButtonProps = {
@@ -73,7 +73,7 @@ const ICONS = {
   alignLeft: 'M4 6h16M4 12h10M4 18h16',
   alignCenter: 'M4 6h16M7 12h10M4 18h16',
   alignRight: 'M4 6h16M10 12h10M4 18h16',
-  undo: 'M9 14l-4-4m0 0l4-4m-4 4h11a4 4 0 010 8h-1',
+  undo: 'M9 14l-4-4m0 0l-4-4m-4 4h11a4 4 0 010 8h-1',
   redo: 'M15 14l4-4m0 0l-4-4m4 4H8a4 4 0 000 8h1',
   clear: 'M6 18L18 6M6 6l12 12',
 };
@@ -96,7 +96,8 @@ export default function RichEditor({ content, onChange }: Props) {
     ],
     content: content ?? '',
     onUpdate: ({ editor }) => {
-      onChange(editor.getJSON());
+      // PERBAIKAN: Output HTML murni langsung dikirim saat ada perubahan konten
+      onChange(editor.getHTML());
     },
     onTransaction: () => {
       forceRerender((n) => n + 1);
