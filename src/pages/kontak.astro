@@ -1,5 +1,6 @@
 ---
-export const prerender = true;
+export const prerender = false;
+
 import Layout from '@/layouts/Layout.astro';
 import ContactForm from '@/components/public/ContactForm.tsx';
 import { getAllServices } from '@/lib/services/service.service';
@@ -7,6 +8,8 @@ import { getSettings } from '@/lib/services/settings.service';
 
 const services = await getAllServices();
 const settings = await getSettings(['social_whatsapp']);
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
 ---
 
 <Layout title="Hubungi Kami" description="Ceritakan kebutuhan website Anda, kami siap membantu.">

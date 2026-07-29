@@ -4,8 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 import vercel from '@astrojs/vercel';
 
 export default defineConfig({
-  output: 'server',      // penting: SSR untuk semua route
+  output: 'server',
   adapter: vercel(),
+  site: 'https://jasaweb.nexarostudio.com',
   integrations: [react()],
   image: {
     service: { entrypoint: 'astro/assets/services/noop' },

@@ -1,5 +1,6 @@
 ---
-export const prerender = true;
+export const prerender = false;
+
 import Layout from '@/layouts/Layout.astro';
 import { getPostBySlug } from '@/lib/services/post.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
@@ -36,6 +37,8 @@ const jsonLdBlocks: Record<string, unknown>[] = [
 if (post.faq && Array.isArray(post.faq) && post.faq.length > 0) {
   jsonLdBlocks.push(faqJsonLd(post.faq as { question: string; answer: string }[]));
 }
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
 <Layout title={seo.title} description={seo.description} ogImage={seo.ogImage} jsonLd={jsonLdBlocks}>

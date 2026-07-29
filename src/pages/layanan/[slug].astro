@@ -1,5 +1,6 @@
 ---
-export const prerender = true;
+export const prerender = false;
+
 import Layout from '@/layouts/Layout.astro';
 import { getServiceBySlug, getServiceLocationBySlug } from '@/lib/services/service.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
@@ -26,7 +27,6 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 });
 
 const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
-const siteUrl = Astro.site?.origin ?? Astro.url.origin;
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
@@ -35,6 +35,8 @@ const jsonLd = serviceJsonLd({
   areaServed: location?.city,
   providerName: 'Nexaro Studio',
 });
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
 <Layout title={seo.title} description={seo.description} jsonLd={jsonLd}>

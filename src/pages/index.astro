@@ -1,5 +1,6 @@
 ---
-export const prerender = true;
+export const prerender = false;
+
 import Layout from '@/layouts/Layout.astro';
 import { getAllServices } from '@/lib/services/service.service';
 import { getPublishedPosts } from '@/lib/services/post.service';
@@ -33,6 +34,8 @@ const jsonLd = organizationJsonLd({
   siteUrl,
   socials: [settings.social_facebook, settings.social_instagram].filter(Boolean),
 });
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
 <Layout
