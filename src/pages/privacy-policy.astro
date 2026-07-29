@@ -1,0 +1,56 @@
+---
+export const prerender = false;
+
+import Layout from '@/layouts/Layout.astro';
+import { getSettings } from '@/lib/services/settings.service';
+
+const settings = await getSettings(['site_name']);
+const siteName = settings.site_name || 'Nexaro Studio';
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+---
+
+<Layout title="Kebijakan Privasi" description={`Kebijakan privasi ${siteName} mengenai pengumpulan dan penggunaan data pengunjung.`}>
+  <article class="prose prose-sm mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-xs uppercase tracking-widest text-brick not-prose">Legalitas</p>
+    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl not-prose">Kebijakan Privasi</h1>
+    <p class="mt-3 text-sm text-charcoal/50 not-prose">Terakhir diperbarui: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+
+    <div class="mt-10 text-charcoal/80">
+      <h2>1. Informasi yang Kami Kumpulkan</h2>
+      <p>
+        Saat Anda menghubungi kami melalui formulir kontak di situs ini, kami mengumpulkan informasi yang Anda berikan secara langsung, seperti nama, alamat email, nomor WhatsApp, dan pesan yang Anda kirimkan.
+      </p>
+
+      <h2>2. Penggunaan Informasi</h2>
+      <p>
+        Informasi yang dikumpulkan digunakan semata-mata untuk merespons pertanyaan atau permintaan konsultasi Anda, serta untuk keperluan komunikasi terkait layanan yang Anda minati. Kami tidak menjual atau membagikan data pribadi Anda kepada pihak ketiga untuk tujuan pemasaran.
+      </p>
+
+      <h2>3. Cookie dan Analitik</h2>
+      <p>
+        Situs ini dapat menggunakan layanan analitik pihak ketiga (seperti Google Analytics) untuk memahami cara pengunjung berinteraksi dengan konten kami. Data ini bersifat agregat dan tidak digunakan untuk mengidentifikasi Anda secara pribadi.
+      </p>
+
+      <h2>4. Keamanan Data</h2>
+      <p>
+        Kami menerapkan langkah-langkah keamanan yang wajar untuk melindungi data yang Anda berikan, termasuk enkripsi pada informasi sensitif dan pembatasan akses hanya untuk pihak yang berwenang.
+      </p>
+
+      <h2>5. Hak Anda</h2>
+      <p>
+        Anda berhak meminta informasi mengenai data pribadi Anda yang kami simpan, serta meminta penghapusan data tersebut, dengan menghubungi kami melalui halaman kontak.
+      </p>
+
+      <h2>6. Perubahan Kebijakan</h2>
+      <p>
+        Kami dapat memperbarui kebijakan privasi ini dari waktu ke waktu. Perubahan akan diinformasikan melalui halaman ini.
+      </p>
+
+      <h2>7. Hubungi Kami</h2>
+      <p>
+        Jika Anda memiliki pertanyaan mengenai kebijakan privasi ini, silakan hubungi kami melalui <a href="/kontak">halaman kontak</a>.
+      </p>
+    </div>
+  </article>
+</Layout>

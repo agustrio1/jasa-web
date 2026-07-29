@@ -1,0 +1,66 @@
+---
+export const prerender = false;
+
+import Layout from '@/layouts/Layout.astro';
+import { getSettings } from '@/lib/services/settings.service';
+
+const settings = await getSettings(['site_name']);
+const siteName = settings.site_name || 'Nexaro Studio';
+
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+---
+
+<Layout title="Syarat & Ketentuan" description={`Syarat dan ketentuan penggunaan layanan ${siteName}.`}>
+  <article class="prose prose-sm mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-xs uppercase tracking-widest text-brick not-prose">Legalitas</p>
+    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl not-prose">Syarat & Ketentuan</h1>
+    <p class="mt-3 text-sm text-charcoal/50 not-prose">Terakhir diperbarui: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+
+    <div class="mt-10 text-charcoal/80">
+      <h2>1. Ketentuan Umum</h2>
+      <p>
+        Dengan menggunakan layanan {siteName}, Anda dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang berlaku di bawah ini.
+      </p>
+
+      <h2>2. Lingkup Layanan</h2>
+      <p>
+        {siteName} menyediakan jasa pembuatan website, meliputi namun tidak terbatas pada desain, pengembangan, dan konfigurasi awal sesuai paket yang dipilih klien. Detail cakupan tiap paket dijelaskan pada halaman layanan masing-masing.
+      </p>
+
+      <h2>3. Proses Pemesanan</h2>
+      <p>
+        Pemesanan layanan dilakukan melalui konsultasi via formulir kontak atau WhatsApp. Kesepakatan mengenai lingkup pekerjaan, harga, dan estimasi waktu pengerjaan akan dikonfirmasi secara tertulis sebelum pekerjaan dimulai.
+      </p>
+
+      <h2>4. Pembayaran</h2>
+      <p>
+        Ketentuan pembayaran (termasuk uang muka jika berlaku) disepakati bersama pada tahap konsultasi awal dan dapat berbeda tergantung skala proyek.
+      </p>
+
+      <h2>5. Revisi</h2>
+      <p>
+        Jumlah dan cakupan revisi mengikuti ketentuan pada masing-masing paket layanan yang dipilih. Revisi di luar cakupan yang disepakati dapat dikenakan biaya tambahan.
+      </p>
+
+      <h2>6. Hak Kekayaan Intelektual</h2>
+      <p>
+        Setelah pembayaran lunas, hak penggunaan atas hasil akhir website (desain dan konten yang dibuat khusus untuk klien) beralih kepada klien, kecuali disebutkan lain dalam kesepakatan tertulis.
+      </p>
+
+      <h2>7. Batasan Tanggung Jawab</h2>
+      <p>
+        {siteName} tidak bertanggung jawab atas kerugian yang timbul dari penggunaan website di luar kendali kami, termasuk namun tidak terbatas pada gangguan pihak ketiga (hosting, domain registrar, atau layanan eksternal lain).
+      </p>
+
+      <h2>8. Perubahan Ketentuan</h2>
+      <p>
+        Kami berhak memperbarui syarat dan ketentuan ini sewaktu-waktu. Perubahan akan diinformasikan melalui halaman ini.
+      </p>
+
+      <h2>9. Hubungi Kami</h2>
+      <p>
+        Pertanyaan terkait syarat dan ketentuan ini dapat disampaikan melalui <a href="/kontak">halaman kontak</a>.
+      </p>
+    </div>
+  </article>
+</Layout>

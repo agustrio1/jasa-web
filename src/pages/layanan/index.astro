@@ -3,32 +3,75 @@ export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
 import { getAllServices } from '@/lib/services/service.service';
+import { db } from '@/lib/db';
 
 const services = await getAllServices();
+
+const servicesWithPackages = await Promise.all(
+  services.map(async (s) => {
+    const full = await db.query.services.findFirst({
+      where: (svc, { eq }) => eq(svc.id, s.id),
+      with: { packages: { orderBy: (p, { asc }) => [asc(p.sortOrder)] } },
+    });
+    return { ...s, startingPackage: full?.packages?.[0] ?? null };
+  })
+);
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
-<Layout title="Layanan Kami" description="Jasa pembuatan website profesional untuk berbagai kebutuhan bisnis.">
+<Layout title="Layanan & Paket" description="Jasa pembuatan website profesional untuk berbagai kebutuhan bisnis.">
   <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-    <p class="font-mono text-xs uppercase tracking-widest text-brick">Layanan</p>
-    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Yang bisa kami bangun untuk Anda</h1>
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="font-mono text-xs uppercase tracking-widest text-brick">Layanan & Paket</p>
+      <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Yang bisa kami bangun untuk Anda</h1>
+      <p class="mt-3 text-charcoal/60">Pilih layanan sesuai kebutuhan bisnis, lengkap dengan paket harga transparan.</p>
+    </div>
 
-    {services.length === 0 ? (
-      <p class="mt-10 text-sm text-charcoal/50">Belum ada layanan yang ditampilkan.</p>
+    {servicesWithPackages.length === 0 ? (
+      <p class="mt-10 text-center text-sm text-charcoal/50">Belum ada layanan yang ditampilkan.</p>
     ) : (
-      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {services.map((s) => (
-          <a href={`/layanan/${s.slug}`} class="group rounded-lg border border-charcoal/10 bg-white/40 p-6 hover:border-brick/40">
-            <h2 class="font-display text-lg font-semibold text-charcoal group-hover:text-brick">{s.name}</h2>
+      <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {servicesWithPackages.map((s) => (
+          <div class="flex flex-col rounded-lg border border-charcoal/10 bg-white p-6">
+            <h2 class="font-display text-lg font-semibold text-charcoal">{s.name}</h2>
             <p class="mt-2 text-sm leading-relaxed text-charcoal/60">{s.shortDescription}</p>
 
-            {s.locations?.length > 0 && (
-              <p class="mt-4 font-mono text-xs text-charcoal/40">
-                Tersedia di {s.locations.length} kota
-              </p>
+            <div class="mt-5">
+              {s.startingPackage ? (
+                <>
+                  <p class="text-xs text-charcoal/40">Mulai dari</p>
+                  <p class="mt-1 text-2xl font-semibold text-brick">
+                    {s.startingPackage.price}
+                    {s.startingPackage.priceNote && <span class="ml-1 text-sm font-normal text-charcoal/50">{s.startingPackage.priceNote}</span>}
+                  </p>
+                </>
+              ) : (
+                <p class="text-sm text-charcoal/50 italic">Hubungi kami untuk info harga</p>
+              )}
+            </div>
+
+            {s.startingPackage?.features && (s.startingPackage.features as string[]).length > 0 && (
+              <ul class="mt-4 flex-1 space-y-2">
+                {(s.startingPackage.features as string[]).slice(0, 5).map((feature) => (
+                  <li class="flex items-start gap-2 text-sm text-charcoal/70">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-4 w-4 shrink-0 text-brick" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
             )}
-          </a>
+
+            {s.locations?.length > 0 && (
+              <p class="mt-4 font-mono text-xs text-charcoal/40">Tersedia di {s.locations.length} kota</p>
+            )}
+
+            <a href={`/layanan/${s.slug}`} class="mt-6 block rounded-full border border-charcoal/20 px-4 py-2.5 text-center text-sm font-medium text-charcoal hover:border-brick hover:text-brick">
+              Lihat Detail
+            </a>
+          </div>
         ))}
       </div>
     )}
