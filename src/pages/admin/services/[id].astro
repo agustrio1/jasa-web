@@ -42,6 +42,7 @@ if (!service) {
             features: (p.features as string[]) ?? [],
             isPopular: p.isPopular,
           })),
+          faq: (service.faq as { question: string; answer: string }[]) ?? [],
         }}
       />
     </div>

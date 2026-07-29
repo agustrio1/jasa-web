@@ -31,6 +31,11 @@ const packageInputSchema = z.object({
   isPopular: z.boolean().default(false),
 });
 
+const faqInputSchema = z.object({
+  question: z.string().trim().min(1),
+  answer: z.string().trim().min(1),
+});
+
 export const serviceInputSchema = z.object({
   name: z.string().trim().min(1, 'Nama layanan wajib diisi').max(200),
   slug: z.string().trim().min(1, 'Slug wajib diisi').max(200),
@@ -39,6 +44,7 @@ export const serviceInputSchema = z.object({
   icon: z.string().trim().max(300).optional(),
   locations: z.array(locationInputSchema).default([]),
   packages: z.array(packageInputSchema).default([]),
+  faq: z.array(faqInputSchema).default([]),
 });
 
 export const postInputSchema = z.object({
@@ -49,7 +55,7 @@ export const postInputSchema = z.object({
   coverImage: z.string().trim().max(1000).optional(),
   categoryId: z.string().trim().optional(),
   tagIds: z.array(z.string()).default([]),
-  faq: z.array(z.object({ question: z.string(), answer: z.string() })).default([]),
+  faq: z.array(faqInputSchema).default([]),
   isPublished: z.boolean().default(false),
 });
 

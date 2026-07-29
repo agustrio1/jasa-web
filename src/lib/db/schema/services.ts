@@ -7,6 +7,7 @@ export const services = pgTable('services', {
   slug: text('slug').notNull().unique(),
   shortDescription: text('short_description'),
   content: jsonb('content'),
+  faq: jsonb('faq'),
   icon: text('icon'),
   isActive: boolean('is_active').notNull().default(true),
   sortOrder: integer('sort_order').notNull().default(0),

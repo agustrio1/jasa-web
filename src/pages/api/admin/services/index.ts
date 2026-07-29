@@ -19,7 +19,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     return new Response(JSON.stringify({ error: formatZodError(parsed.error) }), { status: 400 });
   }
 
-  const { name, slug, shortDescription, content, icon, locations, packages } = parsed.data;
+  const { name, slug, shortDescription, content, icon, locations, packages, faq } = parsed.data;
 
   if (await isSlugTaken(slug)) {
     return new Response(JSON.stringify({ error: 'Slug sudah dipakai' }), { status: 400 });
@@ -32,7 +32,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   }
 
   const serviceId = await createServiceWithLocations(
-    { name, slug, shortDescription, content, icon },
+    { name, slug, shortDescription, content, icon, faq },
     locations,
     packages
   );

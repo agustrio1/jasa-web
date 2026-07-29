@@ -5,7 +5,7 @@ import Layout from '@/layouts/Layout.astro';
 import { getServiceBySlug, getServiceLocationBySlug } from '@/lib/services/service.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
 import { renderRichContent } from '@/lib/tiptap/render';
-import { serviceJsonLd } from '@/lib/seo/json-ld';
+import { serviceJsonLd, faqJsonLd } from '@/lib/seo/json-ld';
 
 const { slug } = Astro.params;
 
@@ -34,21 +34,31 @@ const finalDescription = seo.description || baseDescription;
 
 const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
 const packages = service.packages ?? [];
+const faqItems = (service.faq as { question: string; answer: string }[]) ?? [];
 
-const jsonLd = serviceJsonLd({
-  name: location ? `${service.name} ${location.city}` : service.name,
-  description: finalDescription,
-  url: Astro.url.href,
-  areaServed: location?.city,
-  providerName: 'Nexaro Studio',
-});
+const jsonLdBlocks: Record<string, unknown>[] = [
+  serviceJsonLd({
+    name: location ? `${service.name} ${location.city}` : service.name,
+    description: finalDescription,
+    url: Astro.url.href,
+    areaServed: location?.city,
+    providerName: 'Nexaro Studio',
+  }),
+];
+
+if (faqItems.length > 0) {
+  jsonLdBlocks.push(faqJsonLd(faqItems));
+}
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
-<Layout title={seo.title} description={finalDescription} jsonLd={jsonLd}>
+<Layout title={seo.title} description={finalDescription} jsonLd={jsonLdBlocks}>
   <section class="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
-    <h1 class="font-display text-3xl font-semibold text-charcoal sm:text-4xl">
+    {location && (
+      <p class="font-mono text-xs uppercase tracking-widest text-brick">Tersedia di {location.city}</p>
+    )}
+    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">
       {location ? `${service.name} ${location.city}` : service.name}
     </h1>
 
@@ -99,6 +109,20 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
                 Pilih Paket Ini
               </a>
             </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {faqItems.length > 0 && (
+      <div class="mt-12 border-t border-charcoal/10 pt-8">
+        <h2 class="font-display text-2xl font-semibold text-charcoal">Pertanyaan Umum</h2>
+        <div class="mt-4 space-y-3">
+          {faqItems.map((item) => (
+            <details class="rounded-lg border border-charcoal/10 bg-white/40 p-4">
+              <summary class="cursor-pointer font-medium text-charcoal">{item.question}</summary>
+              <p class="mt-2 text-sm text-charcoal/60">{item.answer}</p>
+            </details>
           ))}
         </div>
       </div>
