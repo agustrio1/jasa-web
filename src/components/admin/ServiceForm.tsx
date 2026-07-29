@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import RichEditor from './RichEditor';
+import ImageField from './ImageField';
 
 type LocationInput = { city: string; slug: string; metaTitle: string; metaDescription: string };
+type PackageInput = { name: string; price: string; priceNote: string; features: string[]; isPopular: boolean };
 
 type Props = {
   initial?: {
@@ -12,6 +14,7 @@ type Props = {
     content: unknown;
     icon: string;
     locations: LocationInput[];
+    packages: PackageInput[];
   };
 };
 
@@ -19,14 +22,10 @@ export default function ServiceForm({ initial }: Props) {
   const [name, setName] = useState(initial?.name ?? '');
   const [slug, setSlug] = useState(initial?.slug ?? '');
   const [shortDescription, setShortDescription] = useState(initial?.shortDescription ?? '');
-  
-  // PERBAIKAN: Definisikan tipe state content sebagai string murni untuk menerima payload HTML
-  const [content, setContent] = useState<string>(
-    typeof initial?.content === 'string' ? initial.content : ''
-  );
-  
+  const [content, setContent] = useState<unknown>(initial?.content ?? '');
   const [icon, setIcon] = useState(initial?.icon ?? '');
   const [locations, setLocations] = useState<LocationInput[]>(initial?.locations ?? []);
+  const [packages, setPackages] = useState<PackageInput[]>(initial?.packages ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,6 +43,25 @@ export default function ServiceForm({ initial }: Props) {
     setLocations(locations.filter((_, i) => i !== index));
   }
 
+  function addPackage() {
+    setPackages([...packages, { name: '', price: '', priceNote: '', features: [], isPopular: false }]);
+  }
+
+  function updatePackage(index: number, field: keyof PackageInput, value: string | boolean | string[]) {
+    const next = [...packages];
+    next[index] = { ...next[index], [field]: value } as PackageInput;
+    setPackages(next);
+  }
+
+  function removePackage(index: number) {
+    setPackages(packages.filter((_, i) => i !== index));
+  }
+
+  function updatePackageFeatures(index: number, rawText: string) {
+    const features = rawText.split('\n').map((f) => f.trim()).filter(Boolean);
+    updatePackage(index, 'features', features);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -52,32 +70,20 @@ export default function ServiceForm({ initial }: Props) {
     const endpoint = initial?.id ? `/api/admin/services/${initial.id}` : '/api/admin/services';
     const method = initial?.id ? 'PUT' : 'POST';
 
-    try {
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, slug, shortDescription, content, icon, locations }),
-      });
+    const res = await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, slug, shortDescription, content, icon, locations, packages }),
+    });
 
-      if (!res.ok) {
-        let errorMessage = 'Gagal menyimpan data';
-        try {
-          const data = await res.json();
-          errorMessage = data.error ?? errorMessage;
-        } catch {
-          errorMessage = `Server Error (${res.status}): ${res.statusText || 'Internal Server Error'}`;
-        }
-        
-        setError(errorMessage);
-        setSaving(false);
-        return;
-      }
-
-      window.location.href = '/admin/services';
-    } catch (err) {
-      setError('Gagal terhubung ke server. Periksa jaringan atau status server Anda.');
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? 'Gagal menyimpan');
       setSaving(false);
+      return;
     }
+
+    window.location.href = '/admin/services';
   }
 
   return (
@@ -94,13 +100,55 @@ export default function ServiceForm({ initial }: Props) {
       <input value={shortDescription} onChange={(e) => setShortDescription(e.target.value)}
         placeholder="Deskripsi singkat" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
 
-      <input value={icon} onChange={(e) => setIcon(e.target.value)} placeholder="Icon (nama/URL)"
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+      <div>
+        <label className="text-sm font-medium text-gray-700">Icon</label>
+        <div className="mt-2">
+          <ImageField value={icon} onChange={setIcon} placeholder="Icon (nama/URL)" />
+        </div>
+      </div>
 
       <div>
         <label className="text-sm font-medium text-gray-700">Konten</label>
         <div className="mt-2">
           <RichEditor content={content} onChange={setContent} />
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700">Paket Harga</label>
+          <button type="button" onClick={addPackage} className="text-sm text-blue-600 hover:underline">
+            + Tambah paket
+          </button>
+        </div>
+
+        <div className="mt-3 space-y-3">
+          {packages.map((pkg, i) => (
+            <div key={i} className="space-y-2 rounded-md border border-gray-200 p-3">
+              <div className="grid grid-cols-2 gap-2">
+                <input value={pkg.name} onChange={(e) => updatePackage(i, 'name', e.target.value)}
+                  placeholder="Nama paket (mis. Basic)" className="rounded-md border border-gray-300 px-2 py-1 text-sm" />
+                <input value={pkg.price} onChange={(e) => updatePackage(i, 'price', e.target.value)}
+                  placeholder="Harga (mis. Rp 1.500.000)" className="rounded-md border border-gray-300 px-2 py-1 text-sm" />
+              </div>
+              <input value={pkg.priceNote} onChange={(e) => updatePackage(i, 'priceNote', e.target.value)}
+                placeholder="Catatan harga (mis. /tahun, opsional)" className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm" />
+              <textarea
+                value={pkg.features.join('\n')}
+                onChange={(e) => updatePackageFeatures(i, e.target.value)}
+                placeholder="Fitur paket, satu per baris"
+                rows={4}
+                className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm"
+              />
+              <label className="flex items-center gap-2 text-xs text-gray-600">
+                <input type="checkbox" checked={pkg.isPopular} onChange={(e) => updatePackage(i, 'isPopular', e.target.checked)} />
+                Tandai sebagai paket populer
+              </label>
+              <button type="button" onClick={() => removePackage(i)} className="text-xs text-red-600 hover:underline">
+                Hapus paket
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 

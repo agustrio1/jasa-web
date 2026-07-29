@@ -33,6 +33,7 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 const finalDescription = seo.description || baseDescription;
 
 const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
+const packages = service.packages ?? [];
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
@@ -59,6 +60,48 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <div class="prose prose-sm mt-8 max-w-none text-charcoal/80" set:html={contentHtml} />
     ) : (
       <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten tidak tersedia.</p>
+    )}
+
+    {packages.length > 0 && (
+      <div class="mt-12">
+        <h2 class="font-display text-2xl font-semibold text-charcoal">Pilihan Paket</h2>
+        <div class="mt-6 grid gap-4 sm:grid-cols-3">
+          {packages.map((pkg: any) => (
+            <div class={`relative rounded-lg border p-6 ${pkg.isPopular ? 'border-brass bg-ink text-bone' : 'border-charcoal/10 bg-white/40'}`}>
+              {pkg.isPopular && (
+                <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brass px-3 py-1 text-xs font-medium text-ink">
+                  Populer
+                </span>
+              )}
+              <h3 class={`font-display text-lg font-semibold ${pkg.isPopular ? 'text-bone' : 'text-charcoal'}`}>{pkg.name}</h3>
+              <p class={`mt-2 text-2xl font-semibold ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>
+                {pkg.price}
+                {pkg.priceNote && <span class={`text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}> {pkg.priceNote}</span>}
+              </p>
+              {pkg.features && (pkg.features as string[]).length > 0 && (
+                <ul class="mt-4 space-y-2">
+                  {(pkg.features as string[]).map((feature) => (
+                    <li class={`flex items-start gap-2 text-sm ${pkg.isPopular ? 'text-bone/80' : 'text-charcoal/70'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" class={`mt-0.5 h-4 w-4 shrink-0 ${pkg.isPopular ? 'text-brass' : 'text-brick'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <a
+                href="/kontak"
+                class={`mt-6 block rounded-full px-4 py-2.5 text-center text-sm font-medium ${
+                  pkg.isPopular ? 'bg-brass text-ink hover:opacity-90' : 'border border-charcoal/20 text-charcoal hover:border-brick hover:text-brick'
+                }`}
+              >
+                Pilih Paket Ini
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
     )}
 
     {!location && service.locations && service.locations.length > 0 && (

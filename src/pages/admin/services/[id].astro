@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 const { id } = Astro.params;
 const service = await db.query.services.findFirst({
   where: eq(services.id, id!),
-  with: { locations: true },
+  with: { locations: true, packages: true },
 });
 
 if (!service) {
@@ -17,8 +17,8 @@ if (!service) {
 ---
 
 <AdminLayout title="Edit Layanan">
-  <section class="mx-auto max-w-2xl p-6">
-    <h1 class="text-2xl font-semibold text-gray-900">Edit Layanan</h1>
+  <section class="mx-auto max-w-2xl p-4 sm:p-6">
+    <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Edit Layanan</h1>
     <div class="mt-6">
       <ServiceForm
         client:load
@@ -34,6 +34,13 @@ if (!service) {
             slug: l.slug,
             metaTitle: l.metaTitle ?? '',
             metaDescription: l.metaDescription ?? '',
+          })),
+          packages: service.packages.map((p) => ({
+            name: p.name,
+            price: p.price,
+            priceNote: p.priceNote ?? '',
+            features: (p.features as string[]) ?? [],
+            isPopular: p.isPopular,
           })),
         }}
       />

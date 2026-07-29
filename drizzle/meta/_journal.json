@@ -22,6 +22,13 @@
       "when": 1785280576749,
       "tag": "0002_woozy_ego",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785318714758,
+      "tag": "0003_steep_shriek",
+      "breakpoints": true
     }
   ]
 }

@@ -1,9 +1,18 @@
 import { ulid } from 'ulid';
 import { eq, and, count } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { services, serviceLocations } from '@/lib/db/schema/services';
+import { services, serviceLocations, servicePackages } from '@/lib/db/schema/services';
 
 const PER_PAGE = 10;
+
+type PackageInput = {
+  id?: string;
+  name: string;
+  price: string;
+  priceNote?: string;
+  features?: string[];
+  isPopular?: boolean;
+};
 
 export async function getAllServices() {
   return db.query.services.findMany({
@@ -12,7 +21,6 @@ export async function getAllServices() {
     with: { locations: true },
   });
 }
-
 
 export async function getServicesPaginated(page: number) {
   const offset = (page - 1) * PER_PAGE;
@@ -40,14 +48,21 @@ export async function getServicesPaginated(page: number) {
 export async function getServiceBySlug(slug: string) {
   return db.query.services.findFirst({
     where: and(eq(services.slug, slug), eq(services.isActive, true)),
-    with: { locations: true },
+    with: {
+      locations: true,
+      packages: { orderBy: (p, { asc }) => [asc(p.sortOrder)] },
+    },
   });
 }
 
 export async function getServiceLocationBySlug(fullSlug: string) {
   return db.query.serviceLocations.findFirst({
     where: and(eq(serviceLocations.slug, fullSlug), eq(serviceLocations.isActive, true)),
-    with: { service: true },
+    with: {
+      service: {
+        with: { packages: { orderBy: (p, { asc }) => [asc(p.sortOrder)] } },
+      },
+    },
   });
 }
 
@@ -62,14 +77,13 @@ export async function isSlugTaken(slug: string, excludeId?: string) {
   return false;
 }
 
-// PERBAIKAN: Menggunakan eksekusi sekuensial non-transaksi untuk neon-http
 export async function createServiceWithLocations(
   input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string },
-  locations: Array<{ city: string; slug: string; metaTitle?: string; metaDescription?: string }>
+  locations: Array<{ city: string; slug: string; metaTitle?: string; metaDescription?: string }>,
+  packages: PackageInput[] = []
 ) {
   const serviceId = ulid();
 
-  // 1. Insert data service utama terlebih dahulu
   await db.insert(services).values({
     id: serviceId,
     name: input.name,
@@ -79,7 +93,6 @@ export async function createServiceWithLocations(
     icon: input.icon,
   });
 
-  // 2. Jika ada lokasi, lakukan insert bulk data lokasi
   if (locations.length > 0) {
     await db.insert(serviceLocations).values(
       locations.map((loc) => ({
@@ -93,16 +106,30 @@ export async function createServiceWithLocations(
     );
   }
 
+  if (packages.length > 0) {
+    await db.insert(servicePackages).values(
+      packages.map((pkg, index) => ({
+        id: ulid(),
+        serviceId,
+        name: pkg.name,
+        price: pkg.price,
+        priceNote: pkg.priceNote,
+        features: pkg.features ?? [],
+        isPopular: pkg.isPopular ?? false,
+        sortOrder: index,
+      }))
+    );
+  }
+
   return serviceId;
 }
 
-// PERBAIKAN: Menggunakan eksekusi sekuensial non-transaksi untuk neon-http
 export async function updateServiceWithLocations(
   serviceId: string,
   input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string },
-  locations: Array<{ id?: string; city: string; slug: string; metaTitle?: string; metaDescription?: string }>
+  locations: Array<{ id?: string; city: string; slug: string; metaTitle?: string; metaDescription?: string }>,
+  packages: PackageInput[] = []
 ) {
-  // 1. Update data utama layanan
   await db.update(services).set({
     name: input.name,
     slug: input.slug,
@@ -112,10 +139,8 @@ export async function updateServiceWithLocations(
     updatedAt: new Date(),
   }).where(eq(services.id, serviceId));
 
-  // 2. Hapus relasi lokasi lama
   await db.delete(serviceLocations).where(eq(serviceLocations.serviceId, serviceId));
 
-  // 3. Masukkan relasi lokasi yang baru diperbarui
   if (locations.length > 0) {
     await db.insert(serviceLocations).values(
       locations.map((loc) => ({
@@ -125,6 +150,23 @@ export async function updateServiceWithLocations(
         slug: loc.slug,
         metaTitle: loc.metaTitle,
         metaDescription: loc.metaDescription,
+      }))
+    );
+  }
+
+  await db.delete(servicePackages).where(eq(servicePackages.serviceId, serviceId));
+
+  if (packages.length > 0) {
+    await db.insert(servicePackages).values(
+      packages.map((pkg, index) => ({
+        id: ulid(),
+        serviceId,
+        name: pkg.name,
+        price: pkg.price,
+        priceNote: pkg.priceNote,
+        features: pkg.features ?? [],
+        isPopular: pkg.isPopular ?? false,
+        sortOrder: index,
       }))
     );
   }

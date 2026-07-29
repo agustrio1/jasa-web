@@ -22,6 +22,15 @@ const locationInputSchema = z.object({
   metaDescription: z.string().trim().optional(),
 });
 
+const packageInputSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(1, 'Nama paket wajib diisi').max(100),
+  price: z.string().trim().min(1, 'Harga wajib diisi').max(50),
+  priceNote: z.string().trim().max(100).optional(),
+  features: z.array(z.string()).default([]),
+  isPopular: z.boolean().default(false),
+});
+
 export const serviceInputSchema = z.object({
   name: z.string().trim().min(1, 'Nama layanan wajib diisi').max(200),
   slug: z.string().trim().min(1, 'Slug wajib diisi').max(200),
@@ -29,6 +38,7 @@ export const serviceInputSchema = z.object({
   content: z.unknown().optional(),
   icon: z.string().trim().max(300).optional(),
   locations: z.array(locationInputSchema).default([]),
+  packages: z.array(packageInputSchema).default([]),
 });
 
 export const postInputSchema = z.object({
