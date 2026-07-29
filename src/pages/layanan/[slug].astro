@@ -4,6 +4,7 @@ export const prerender = false;
 import Layout from '@/layouts/Layout.astro';
 import { getServiceBySlug, getServiceLocationBySlug } from '@/lib/services/service.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
+import { renderRichContent } from '@/lib/tiptap/render';
 import { serviceJsonLd } from '@/lib/seo/json-ld';
 
 const { slug } = Astro.params;
@@ -13,16 +14,15 @@ let location = null;
 
 if (!service) {
   location = await getServiceLocationBySlug(slug!);
-  // Pastikan mengambil relasi service dengan aman
-  service = location?.service ?? (location as any)?.services ?? null;
+  service = location?.service ?? null;
 }
 
 if (!service) {
   return Astro.redirect('/404');
 }
 
-const baseDescription = location 
-  ? (location.metaDescription || service.shortDescription || '') 
+const baseDescription = location
+  ? (location.metaDescription || service.shortDescription || '')
   : (service.shortDescription || '');
 
 const seo = await resolveSeo(location ? 'service_location' : 'service', location?.id ?? service.id, {
@@ -32,28 +32,7 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 
 const finalDescription = seo.description || baseDescription;
 
-// --- LAYER EXTRAKSI AMAN (Bypass Drizzle Nesting) ---
-// 1. Ambil raw data konten dari lokasi atau service utama
-let rawContent = location?.contentOverride ?? service.content;
-
-// 2. Jika masih kosong, cek kemungkinan objek Drizzle terbungkus nama tabel (nested select)
-if (!rawContent) {
-  const deepService = (service as any).services || service;
-  const deepLocation = location ? ((location as any).service_locations || location) : null;
-  rawContent = deepLocation?.contentOverride ?? deepService?.content;
-}
-
-// 3. Konversi ke string HTML murni
-let contentHtml = '';
-if (rawContent) {
-  if (typeof rawContent === 'string') {
-    contentHtml = rawContent;
-  } else if (typeof rawContent === 'object') {
-    // Jaga-jaga jika di DB masih tersimpan bungkus JSON stringify tambahan
-    contentHtml = (rawContent as any).html || JSON.stringify(rawContent);
-  }
-}
-// -----------------------------------------------------
+const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
@@ -71,24 +50,15 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     <h1 class="font-display text-3xl font-semibold text-charcoal sm:text-4xl">
       {location ? `${service.name} ${location.city}` : service.name}
     </h1>
-    
+
     {finalDescription && (
       <p class="mt-4 text-charcoal/60">{finalDescription}</p>
     )}
 
-    {/* OUTPUT LAYER */}
-    {contentHtml && contentHtml.trim() ? (
+    {contentHtml ? (
       <div class="prose prose-sm mt-8 max-w-none text-charcoal/80" set:html={contentHtml} />
     ) : (
-      <div class="mt-8 rounded-md bg-amber-50 p-4 border border-amber-200 text-xs font-mono text-amber-800">
-        <p class="font-bold mb-2">⚠️ Debug Log: Data terdeteksi kosong di Server Astro</p>
-        <p class="mb-1"><strong>Astro.params.slug:</strong> {slug}</p>
-        <p class="mb-1"><strong>Is Location Page?:</strong> {location ? 'Yes' : 'No'}</p>
-        <details class="mt-2">
-          <summary class="cursor-pointer underline">Lihat isi Dump Object 'service' dari DB</summary>
-          <pre class="mt-2 bg-white p-2 border overflow-auto max-h-60">{JSON.stringify(service, null, 2)}</pre>
-        </details>
-      </div>
+      <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten tidak tersedia.</p>
     )}
 
     {!location && service.locations && service.locations.length > 0 && (
