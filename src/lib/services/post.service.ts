@@ -76,28 +76,26 @@ export async function createPost(
   },
   tagIds: string[]
 ) {
-  return db.transaction(async (tx) => {
-    const postId = ulid();
+  const postId = ulid();
 
-    await tx.insert(posts).values({
-      id: postId,
-      title: input.title,
-      slug: input.slug,
-      excerpt: input.excerpt,
-      content: input.content,
-      coverImage: input.coverImage,
-      categoryId: input.categoryId,
-      faq: input.faq,
-      isPublished: input.isPublished ?? false,
-      publishedAt: input.isPublished ? new Date() : null,
-    });
-
-    if (tagIds.length > 0) {
-      await tx.insert(postTags).values(tagIds.map((tagId) => ({ postId, tagId })));
-    }
-
-    return postId;
+  await db.insert(posts).values({
+    id: postId,
+    title: input.title,
+    slug: input.slug,
+    excerpt: input.excerpt,
+    content: input.content,
+    coverImage: input.coverImage,
+    categoryId: input.categoryId,
+    faq: input.faq,
+    isPublished: input.isPublished ?? false,
+    publishedAt: input.isPublished ? new Date() : null,
   });
+
+  if (tagIds.length > 0) {
+    await db.insert(postTags).values(tagIds.map((tagId) => ({ postId, tagId })));
+  }
+
+  return postId;
 }
 
 export async function updatePost(
@@ -108,26 +106,24 @@ export async function updatePost(
   },
   tagIds: string[]
 ) {
-  return db.transaction(async (tx) => {
-    await tx.update(posts).set({
-      title: input.title,
-      slug: input.slug,
-      excerpt: input.excerpt,
-      content: input.content,
-      coverImage: input.coverImage,
-      categoryId: input.categoryId,
-      faq: input.faq,
-      isPublished: input.isPublished ?? false,
-      publishedAt: input.isPublished ? new Date() : null,
-      updatedAt: new Date(),
-    }).where(eq(posts.id, postId));
+  await db.update(posts).set({
+    title: input.title,
+    slug: input.slug,
+    excerpt: input.excerpt,
+    content: input.content,
+    coverImage: input.coverImage,
+    categoryId: input.categoryId,
+    faq: input.faq,
+    isPublished: input.isPublished ?? false,
+    publishedAt: input.isPublished ? new Date() : null,
+    updatedAt: new Date(),
+  }).where(eq(posts.id, postId));
 
-    await tx.delete(postTags).where(eq(postTags.postId, postId));
+  await db.delete(postTags).where(eq(postTags.postId, postId));
 
-    if (tagIds.length > 0) {
-      await tx.insert(postTags).values(tagIds.map((tagId) => ({ postId, tagId })));
-    }
-  });
+  if (tagIds.length > 0) {
+    await db.insert(postTags).values(tagIds.map((tagId) => ({ postId, tagId })));
+  }
 }
 
 export async function deletePost(id: string) {
