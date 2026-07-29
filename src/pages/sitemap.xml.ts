@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ site }) => {
     db.query.tags.findMany(),
   ]);
 
-  const baseUrl = site?.origin ?? 'https://example.com';
+  const baseUrl = site?.origin ?? 'https://jasaweb.nexarostudio.com';
 
   const urls = [
     baseUrl,

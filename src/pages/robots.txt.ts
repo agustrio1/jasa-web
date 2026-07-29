@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 
 export const GET: APIRoute = ({ site }) => {
-  const baseUrl = site?.origin ?? 'https://example.com';
+  const baseUrl = site?.origin ?? 'https://jasaweb.nexarostudio.com';
 
   const body = `User-agent: *
 Allow: /
