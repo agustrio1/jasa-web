@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import vercel from '@astrojs/vercel';
 
 export default defineConfig({
+  output: 'server',      // penting: SSR untuk semua route
   adapter: vercel(),
   integrations: [react()],
   image: {
