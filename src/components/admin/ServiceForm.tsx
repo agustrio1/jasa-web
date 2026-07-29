@@ -47,20 +47,34 @@ export default function ServiceForm({ initial }: Props) {
     const endpoint = initial?.id ? `/api/admin/services/${initial.id}` : '/api/admin/services';
     const method = initial?.id ? 'PUT' : 'POST';
 
-    const res = await fetch(endpoint, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, slug, shortDescription, content, icon, locations }),
-    });
+    try {
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, slug, shortDescription, content, icon, locations }),
+      });
 
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.error ?? 'Gagal menyimpan');
+      if (!res.ok) {
+        let errorMessage = 'Gagal menyimpan data';
+        try {
+          // Hanya parse JSON jika response dari server valid
+          const data = await res.json();
+          errorMessage = data.error ?? errorMessage;
+        } catch {
+          // Jika server crash 500 berupa HTML/Teks biasa
+          errorMessage = `Server Error (${res.status}): ${res.statusText || 'Internal Server Error'}`;
+        }
+        
+        setError(errorMessage);
+        setSaving(false);
+        return;
+      }
+
+      window.location.href = '/admin/services';
+    } catch (err) {
+      setError('Gagal terhubung ke server. Periksa jaringan atau status server Anda.');
       setSaving(false);
-      return;
     }
-
-    window.location.href = '/admin/services';
   }
 
   return (

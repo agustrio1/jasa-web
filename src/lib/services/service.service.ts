@@ -60,69 +60,72 @@ export async function isSlugTaken(slug: string, excludeId?: string) {
   return false;
 }
 
+// PERBAIKAN: Menggunakan eksekusi sekuensial non-transaksi untuk neon-http
 export async function createServiceWithLocations(
   input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string },
   locations: Array<{ city: string; slug: string; metaTitle?: string; metaDescription?: string }>
 ) {
-  return db.transaction(async (tx) => {
-    const serviceId = ulid();
+  const serviceId = ulid();
 
-    await tx.insert(services).values({
-      id: serviceId,
-      name: input.name,
-      slug: input.slug,
-      shortDescription: input.shortDescription,
-      content: input.content,
-      icon: input.icon,
-    });
-
-    if (locations.length > 0) {
-      await tx.insert(serviceLocations).values(
-        locations.map((loc) => ({
-          id: ulid(),
-          serviceId,
-          city: loc.city,
-          slug: loc.slug,
-          metaTitle: loc.metaTitle,
-          metaDescription: loc.metaDescription,
-        }))
-      );
-    }
-
-    return serviceId;
+  // 1. Insert data service utama terlebih dahulu
+  await db.insert(services).values({
+    id: serviceId,
+    name: input.name,
+    slug: input.slug,
+    shortDescription: input.shortDescription,
+    content: input.content,
+    icon: input.icon,
   });
+
+  // 2. Jika ada lokasi, lakukan insert bulk data lokasi
+  if (locations.length > 0) {
+    await db.insert(serviceLocations).values(
+      locations.map((loc) => ({
+        id: ulid(),
+        serviceId,
+        city: loc.city,
+        slug: loc.slug,
+        metaTitle: loc.metaTitle,
+        metaDescription: loc.metaDescription,
+      }))
+    );
+  }
+
+  return serviceId;
 }
 
+// PERBAIKAN: Menggunakan eksekusi sekuensial non-transaksi untuk neon-http
 export async function updateServiceWithLocations(
   serviceId: string,
   input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string },
   locations: Array<{ id?: string; city: string; slug: string; metaTitle?: string; metaDescription?: string }>
 ) {
-  return db.transaction(async (tx) => {
-    await tx.update(services).set({
-      name: input.name,
-      slug: input.slug,
-      shortDescription: input.shortDescription,
-      content: input.content,
-      icon: input.icon,
-      updatedAt: new Date(),
-    }).where(eq(services.id, serviceId));
+  // 1. Update data utama layanan
+  await db.update(services).set({
+    name: input.name,
+    slug: input.slug,
+    shortDescription: input.shortDescription,
+    content: input.content,
+    icon: input.icon,
+    updatedAt: new Date(),
+  }).where(eq(services.id, serviceId));
 
-    await tx.delete(serviceLocations).where(eq(serviceLocations.serviceId, serviceId));
+  // 2. Hapus relasi lokasi lama
+  await db.delete(serviceLocations).where(eq(serviceLocations.serviceId, serviceId));
 
-    if (locations.length > 0) {
-      await tx.insert(serviceLocations).values(
-        locations.map((loc) => ({
-          id: ulid(),
-          serviceId,
-          city: loc.city,
-          slug: loc.slug,
-          metaTitle: loc.metaTitle,
-          metaDescription: loc.metaDescription,
-        }))
-      );
-    }
-  });
+  // 3. Masukkan relasi lokasi yang baru diperbarui
+  if (locations.length > 0) {
+    await db.insert(serviceLocations).values(
+      locations.map((loc) => ({
+        id: ulid(),
+        serviceId,
+        city: loc.city,
+        slug: loc.slug,
+        metaTitle: loc.metaTitle,
+        metaDescription: loc.metaDescription,
+      }))
+    );
+  }
 }
 
 export async function deleteService(id: string) {
