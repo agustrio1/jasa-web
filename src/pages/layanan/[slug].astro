@@ -21,7 +21,7 @@ if (!service) {
   return Astro.redirect('/404');
 }
 
-// Ambil deskripsi dasar dari service/location terlebih dahulu sebagai fallback utama
+// Ambil deskripsi dasar dari service/location sebagai fallback metadata
 const baseDescription = location 
   ? (location.metaDescription || service.shortDescription || '') 
   : (service.shortDescription || '');
@@ -31,10 +31,20 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
   description: baseDescription,
 });
 
-// Jika seo.description kosong dari fungsi resolveSeo, gunakan baseDescription agar tetap tampil
 const finalDescription = seo.description || baseDescription;
 
-const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
+// Ambil raw data konten dari database
+const rawContent = location?.contentOverride ?? service.content;
+let contentHtml = renderRichContent(rawContent);
+
+// SAFE GUARD: Jika renderer tiptap gagal total tetapi rawContent ada datanya, paksa konversi ke string
+if (!contentHtml && rawContent) {
+  if (typeof rawContent === 'string' && rawContent.trim().length > 0) {
+    contentHtml = `<p>${rawContent.replace(/\n/g, '<br>')}</p>`;
+  } else if (typeof rawContent === 'object') {
+    contentHtml = `<p>${JSON.stringify(rawContent)}</p>`;
+  }
+}
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
@@ -53,13 +63,15 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       {location ? `${service.name} ${location.city}` : service.name}
     </h1>
     
-    {/* Menggunakan finalDescription yang sudah divalidasi */}
     {finalDescription && (
       <p class="mt-4 text-charcoal/60">{finalDescription}</p>
     )}
 
-    {contentHtml && (
+    {/* Render Konten Utama */}
+    {contentHtml ? (
       <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
+    ) : (
+      <p class="mt-8 text-sm text-charcoal/40 italic">Tidak ada detail konten tambahan untuk layanan ini.</p>
     )}
 
     {!location && service.locations && service.locations.length > 0 && (

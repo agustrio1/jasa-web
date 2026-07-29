@@ -21,27 +21,51 @@ const EXTENSIONS = [
 export function renderRichContent(content: unknown): string {
   if (!content) return '';
 
-  let parsedContent = content;
+  let parsed: any = content;
 
-  // PERBAIKAN: Jika database mengembalikan string JSON, parse dulu menjadi objek
+  // 1. Jika bertipe string, coba parse ke objek JSON
   if (typeof content === 'string') {
     try {
-      parsedContent = JSON.parse(content);
-    } catch (e) {
-      console.error('Gagal memparsing string konten Tiptap:', e);
-      return ''; // Jika memang string biasa dan bukan JSON valid, return kosong
+      parsed = JSON.parse(content);
+    } catch {
+      // Jika string biasa (bukan JSON), langsung bungkus ke tag paragraf
+      return `<p>${content.replace(/\n/g, '<br>')}</p>`;
     }
   }
 
-  // Pastikan sekarang bentuknya sudah berupa objek Tiptap yang valid
-  if (!parsedContent || typeof parsedContent !== 'object') {
-    return '';
+  // 2. Jika tipenya objek tetapi tidak memiliki struktur Tiptap standar ('type' dan 'content')
+  if (parsed && typeof parsed === 'object' && !parsed.type) {
+    // Kemungkinan data dibungkus dalam properti internal Drizzle/Postgres seperti .json atau .value
+    if (parsed.json) return renderRichContent(parsed.json);
+    if (parsed.value) return renderRichContent(parsed.value);
+    
+    // Fallback: Jika berupa objek stringified murni bawaan editor teks
+    if (typeof parsed.toString === 'function') {
+      const str = parsed.toString();
+      if (str !== '[object Object]') return `<p>${str}</p>`;
+    }
   }
 
+  // 3. Render HTML menggunakan Tiptap generator resmi
   try {
-    return generateHTML(parsedContent as any, EXTENSIONS);
+    return generateHTML(parsed, EXTENSIONS);
   } catch (error) {
-    console.error('Gagal generate HTML dari Tiptap Object:', error);
+    // Fallback terakhir: jika Tiptap schema-nya corrupt/tidak valid, ekstrak text node manual
+    try {
+      if (parsed?.content && Array.isArray(parsed.content)) {
+        return parsed.content
+          .map((node: any) => {
+            if (node.type === 'paragraph' && node.content) {
+              return `<p>${node.content.map((c: any) => c.text || '').join('')}</p>`;
+            }
+            if (node.type === 'heading' && node.content) {
+              return `<h${node.attrs?.level || 2}>${node.content.map((c: any) => c.text || '').join('')}</h${node.attrs?.level || 2}>`;
+            }
+            return '';
+          })
+          .join('');
+      }
+    } catch {}
     return '';
   }
 }
