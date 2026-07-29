@@ -4,7 +4,6 @@ export const prerender = false;
 import Layout from '@/layouts/Layout.astro';
 import { getServiceBySlug, getServiceLocationBySlug } from '@/lib/services/service.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
-import { renderRichContent } from '@/lib/tiptap/render';
 import { serviceJsonLd } from '@/lib/seo/json-ld';
 
 const { slug } = Astro.params;
@@ -33,16 +32,32 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 
 const finalDescription = seo.description || baseDescription;
 
-// Ambil raw data konten dari database
+// Ambil raw data konten teks dari database
 const rawContent = location?.contentOverride ?? service.content;
-let contentHtml = renderRichContent(rawContent);
 
-// SAFE GUARD: Jika renderer tiptap gagal total tetapi rawContent ada datanya, paksa konversi ke string
-if (!contentHtml && rawContent) {
-  if (typeof rawContent === 'string' && rawContent.trim().length > 0) {
-    contentHtml = `<p>${rawContent.replace(/\n/g, '<br>')}</p>`;
+// Ekstraksi teks murni jika data bertipe objek JSON dari Tiptap
+let displayText = '';
+if (rawContent) {
+  if (typeof rawContent === 'string') {
+    displayText = rawContent;
   } else if (typeof rawContent === 'object') {
-    contentHtml = `<p>${JSON.stringify(rawContent)}</p>`;
+    try {
+      // Jika data dibungkus skema Tiptap, bongkar secara rekursif ke teks biasa
+      const extractText = (node: any): string => {
+        if (!node) return '';
+        if (node.text) return node.text;
+        if (Array.isArray(node.content)) {
+          return node.content.map(extractText).join('');
+        }
+        if (Array.isArray(node)) {
+          return node.map(extractText).join('\n');
+        }
+        return '';
+      };
+      displayText = extractText(rawContent) || JSON.stringify(rawContent);
+    } catch {
+      displayText = JSON.stringify(rawContent);
+    }
   }
 }
 
@@ -67,9 +82,11 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <p class="mt-4 text-charcoal/60">{finalDescription}</p>
     )}
 
-    {/* Render Konten Utama */}
-    {contentHtml ? (
-      <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
+    {/* RENDER MENGGUNAKAN CSS UTILITY (whitespace-pre-line) */}
+    {displayText ? (
+      <div class="mt-8 text-sm leading-relaxed text-charcoal/80 whitespace-pre-line sm:text-base">
+        {displayText}
+      </div>
     ) : (
       <p class="mt-8 text-sm text-charcoal/40 italic">Tidak ada detail konten tambahan untuk layanan ini.</p>
     )}
