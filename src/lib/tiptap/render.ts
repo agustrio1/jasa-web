@@ -19,11 +19,19 @@ const EXTENSIONS = [
 ];
 
 export function renderRichContent(content: unknown): string {
-  if (!content || typeof content !== 'object') return '';
+  console.log('renderRichContent INPUT:', JSON.stringify(content));
+
+  if (!content || typeof content !== 'object') {
+    console.log('renderRichContent: content bukan object, return empty');
+    return '';
+  }
 
   try {
-    return generateHTML(content as any, EXTENSIONS);
-  } catch {
+    const html = generateHTML(content as any, EXTENSIONS);
+    console.log('renderRichContent OUTPUT:', html);
+    return html;
+  } catch (err) {
+    console.log('renderRichContent ERROR:', err);
     return '';
   }
 }
