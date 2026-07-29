@@ -4,6 +4,7 @@ export const prerender = false;
 import Layout from '@/layouts/Layout.astro';
 import { getServiceBySlug, getServiceLocationBySlug } from '@/lib/services/service.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
+import { renderRichContent } from '@/lib/tiptap/render';
 import { serviceJsonLd } from '@/lib/seo/json-ld';
 
 const { slug } = Astro.params;
@@ -20,7 +21,6 @@ if (!service) {
   return Astro.redirect('/404');
 }
 
-// Ambil deskripsi dasar dari database
 const baseDescription = location 
   ? (location.metaDescription || service.shortDescription || '') 
   : (service.shortDescription || '');
@@ -32,47 +32,8 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 
 const finalDescription = seo.description || baseDescription;
 
-// --- FALLBACK PARSING TOTAL ---
-// Ambil data konten mentah dari object layanan
-const rawContent = location?.contentOverride ?? service.content;
-let displayText = "";
-
-if (rawContent) {
-  if (typeof rawContent === 'string') {
-    displayText = rawContent;
-  } else if (typeof rawContent === 'object') {
-    try {
-      // Fungsi rekursif untuk membongkar paksa semua text node di dalam skema Tiptap JSON
-      const parseTiptapNode = (node: any): string => {
-        if (!node) return "";
-        if (typeof node === 'string') return node;
-        if (node.text) return node.text;
-        
-        if (Array.isArray(node.content)) {
-          return node.content.map(parseTiptapNode).join("");
-        }
-        if (Array.isArray(node)) {
-          return node.map(parseTiptapNode).join("\n");
-        }
-        if (node.json) return parseTiptapNode(node.json);
-        
-        // Jika ada properti object bertingkat didalamnya
-        return Object.values(node)
-          .map(val => (typeof val === 'object' ? parseTiptapNode(val) : ""))
-          .join("");
-      };
-      
-      displayText = parseTiptapNode(rawContent);
-    } catch (e) {
-      displayText = String(rawContent);
-    }
-  }
-}
-
-// Jika ekstraksi object gagal tapi ada deskripsi pendek, gunakan deskripsi pendek sebagai konten cadangan terakhir
-if (!displayText.trim()) {
-  displayText = finalDescription;
-}
+// Render data skema JSON menjadi HTML murni
+const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
@@ -91,13 +52,14 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       {location ? `${service.name} ${location.city}` : service.name}
     </h1>
     
-    {/* RENDER DENGAN BLOK DIV KHUSUS CSS WHITESPACE */}
-    {displayText ? (
-      <div class="mt-8 text-base leading-relaxed text-charcoal/80 whitespace-pre-line select-text">
-        {displayText}
-      </div>
+    {finalDescription && (
+      <p class="mt-4 text-charcoal/60">{finalDescription}</p>
+    )}
+
+    {contentHtml ? (
+      <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
     ) : (
-      <p class="mt-8 text-sm text-charcoal/40 italic">Deskripsi konten tidak tersedia.</p>
+      <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten belum diisi.</p>
     )}
 
     {!location && service.locations && service.locations.length > 0 && (
