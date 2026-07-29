@@ -9,8 +9,10 @@ export async function getAllServices() {
   return db.query.services.findMany({
     where: eq(services.isActive, true),
     orderBy: (s, { asc }) => [asc(s.sortOrder)],
+    with: { locations: true },
   });
 }
+
 
 export async function getServicesPaginated(page: number) {
   const offset = (page - 1) * PER_PAGE;

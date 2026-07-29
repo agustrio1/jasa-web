@@ -21,16 +21,24 @@ if (!service) {
   return Astro.redirect('/404');
 }
 
+// Ambil deskripsi dasar dari service/location terlebih dahulu sebagai fallback utama
+const baseDescription = location 
+  ? (location.metaDescription || service.shortDescription || '') 
+  : (service.shortDescription || '');
+
 const seo = await resolveSeo(location ? 'service_location' : 'service', location?.id ?? service.id, {
   title: location ? (location.metaTitle ?? `${service.name} ${location.city}`) : service.name,
-  description: location ? (location.metaDescription ?? service.shortDescription ?? '') : (service.shortDescription ?? ''),
+  description: baseDescription,
 });
+
+// Jika seo.description kosong dari fungsi resolveSeo, gunakan baseDescription agar tetap tampil
+const finalDescription = seo.description || baseDescription;
 
 const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
 
 const jsonLd = serviceJsonLd({
   name: location ? `${service.name} ${location.city}` : service.name,
-  description: seo.description,
+  description: finalDescription,
   url: Astro.url.href,
   areaServed: location?.city,
   providerName: 'Nexaro Studio',
@@ -39,18 +47,22 @@ const jsonLd = serviceJsonLd({
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
-<Layout title={seo.title} description={seo.description} jsonLd={jsonLd}>
+<Layout title={seo.title} description={finalDescription} jsonLd={jsonLd}>
   <section class="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
     <h1 class="font-display text-3xl font-semibold text-charcoal sm:text-4xl">
       {location ? `${service.name} ${location.city}` : service.name}
     </h1>
-    <p class="mt-4 text-charcoal/60">{seo.description}</p>
+    
+    {/* Menggunakan finalDescription yang sudah divalidasi */}
+    {finalDescription && (
+      <p class="mt-4 text-charcoal/60">{finalDescription}</p>
+    )}
 
     {contentHtml && (
       <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
     )}
 
-    {!location && service.locations?.length > 0 && (
+    {!location && service.locations && service.locations.length > 0 && (
       <div class="mt-10 rounded-lg border border-charcoal/10 bg-white/40 p-6">
         <h2 class="font-display text-lg font-semibold text-charcoal">Tersedia di kota:</h2>
         <div class="mt-3 flex flex-wrap gap-2">
