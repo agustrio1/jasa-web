@@ -39,7 +39,7 @@ export async function createCategory(name: string, slug: string, description?: s
 
 export async function updateCategory(id: string, name: string, slug: string, description?: string) {
   await db.update(categories)
-    .set({ name, slug, description })
+    .set({ name, slug, description, updatedAt: new Date() })
     .where(eq(categories.id, id));
 }
 
@@ -88,7 +88,7 @@ export async function createTag(name: string, slug: string) {
 
 export async function updateTag(id: string, name: string, slug: string) {
   await db.update(tags)
-    .set({ name, slug })
+    .set({ name, slug, updatedAt: new Date() })
     .where(eq(tags.id, id));
 }
 

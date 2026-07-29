@@ -7,6 +7,7 @@ export const categories = pgTable('categories', {
   slug: text('slug').notNull().unique(),
   description: text('description'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 export const tags = pgTable('tags', {
@@ -14,6 +15,7 @@ export const tags = pgTable('tags', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 export const posts = pgTable('posts', {
