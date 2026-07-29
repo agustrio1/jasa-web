@@ -1,0 +1,42 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getVisitorsSummary, getTopPages } from '@/lib/analytics/analytics.service';
+
+const visitors = await getVisitorsSummary(7);
+const topPages = await getTopPages(7, 10);
+---
+
+<AdminLayout title="Analytics">
+  <section class="p-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Analytics (7 hari terakhir)</h1>
+
+    {!visitors ? (
+      <p class="mt-4 text-gray-500">GA4 belum dikonfigurasi. Atur di halaman Settings.</p>
+    ) : (
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <div>
+          <h2 class="text-sm font-medium text-gray-500">Pengunjung Harian</h2>
+          <ul class="mt-2 space-y-1">
+            {visitors.map((v) => (
+              <li class="flex justify-between text-sm">
+                <span>{v.date}</span>
+                <span>{v.activeUsers} pengunjung / {v.pageViews} views</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h2 class="text-sm font-medium text-gray-500">Halaman Teratas</h2>
+          <ul class="mt-2 space-y-1">
+            {topPages?.map((p) => (
+              <li class="flex justify-between text-sm">
+                <span class="truncate">{p.path}</span>
+                <span>{p.views}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    )}
+  </section>
+</AdminLayout>

@@ -1,0 +1,233 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { getAllServices } from '@/lib/services/service.service';
+import { getPublishedPosts } from '@/lib/services/post.service';
+import { getFeaturedPortfolios } from '@/lib/services/portfolio.service';
+import { getSettings } from '@/lib/services/settings.service';
+import { organizationJsonLd } from '@/lib/seo/json-ld';
+
+const services = await getAllServices();
+const latestPosts = (await getPublishedPosts()).slice(0, 3);
+const settings = await getSettings([
+  'site_name', 'site_default_meta_description', 'social_facebook', 'social_instagram', 'social_whatsapp',
+  'homepage_featured_count',
+]);
+
+const featuredCount = parseInt(settings.homepage_featured_count, 10) || 3;
+const featuredPortfolios = await getFeaturedPortfolios(featuredCount);
+
+const siteName = settings.site_name || 'Nexaro Studio';
+const siteUrl = Astro.site?.origin ?? Astro.url.origin;
+
+const cities = Array.from(
+  new Set(services.flatMap((s) => s.locations?.map((l: any) => l.city) ?? []))
+).slice(0, 12);
+
+const exampleSlugs = services
+  .flatMap((s) => s.locations?.slice(0, 1).map((l: any) => l.slug) ?? [])
+  .slice(0, 4);
+
+const jsonLd = organizationJsonLd({
+  siteName,
+  siteUrl,
+  socials: [settings.social_facebook, settings.social_instagram].filter(Boolean),
+});
+---
+
+<Layout
+  title={`${siteName} — Jasa Pembuatan Website`}
+  description={settings.site_default_meta_description || 'Jasa pembuatan website profesional untuk bisnis di berbagai kota.'}
+  jsonLd={jsonLd}
+>
+  <section class="relative overflow-hidden bg-ink py-24 text-bone sm:py-32">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.07]"
+      style="background-image: repeating-linear-gradient(0deg, var(--color-brass) 0px, var(--color-brass) 1px, transparent 1px, transparent 48px), repeating-linear-gradient(90deg, var(--color-brass) 0px, var(--color-brass) 1px, transparent 1px, transparent 48px);"
+    ></div>
+
+    <div class="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
+      <p class="font-mono text-xs uppercase tracking-[0.3em] text-brass">Jasa Pembuatan Website</p>
+
+      <h1 class="mt-6 font-display text-4xl font-semibold leading-tight sm:text-6xl">
+        Website yang dibangun rapi,<br class="hidden sm:block" /> kota demi kota.
+      </h1>
+
+      <p class="mx-auto mt-6 max-w-xl text-base text-bone/70 sm:text-lg">
+        Kami merancang dan membangun website bisnis yang siap tayang — lengkap dengan CMS, SEO, dan dukungan untuk tiap kota tempat Anda melayani.
+      </p>
+
+      {exampleSlugs.length > 0 && (
+        <div class="mx-auto mt-8 max-w-md rounded-lg border border-brass/30 bg-black/20 px-4 py-3 text-left font-mono text-xs text-brass/90 sm:text-sm">
+          <span class="text-bone/40">{siteUrl}/layanan/</span><span id="typewriter"></span><span class="animate-pulse">|</span>
+        </div>
+      )}
+
+      <div class="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+        <a href="/layanan" class="rounded-full bg-brass px-6 py-3 text-sm font-medium text-ink hover:opacity-90">
+          Lihat Layanan Kami
+        </a>
+        {settings.social_whatsapp && (
+          <a
+            href={`https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="rounded-full border border-bone/30 px-6 py-3 text-sm font-medium text-bone hover:border-brass hover:text-brass"
+          >
+            Konsultasi via WhatsApp
+          </a>
+        )}
+      </div>
+    </div>
+  </section>
+
+  {services.length > 0 && (
+    <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      <div class="mb-10 flex items-end justify-between">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-widest text-brick">Layanan</p>
+          <h2 class="mt-2 font-display text-3xl font-semibold text-charcoal">Yang bisa kami bangun untuk Anda</h2>
+        </div>
+        <a href="/layanan" class="hidden text-sm font-medium text-brick hover:underline sm:inline">Lihat semua →</a>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {services.slice(0, 6).map((s) => (
+          <a
+            href={`/layanan/${s.slug}`}
+            class="group rounded-lg border border-charcoal/10 bg-white/40 p-6 transition-colors hover:border-brick/40"
+          >
+            <h3 class="font-display text-lg font-semibold text-charcoal group-hover:text-brick">{s.name}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-charcoal/60">{s.shortDescription}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {featuredPortfolios.length > 0 && (
+    <section class="bg-charcoal/5 py-20">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <div class="mb-10 flex items-end justify-between">
+          <div>
+            <p class="font-mono text-xs uppercase tracking-widest text-brick">Portofolio</p>
+            <h2 class="mt-2 font-display text-3xl font-semibold text-charcoal">Proyek unggulan</h2>
+          </div>
+          <a href="/portfolio" class="hidden text-sm font-medium text-brick hover:underline sm:inline">Lihat semua →</a>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {featuredPortfolios.map((p) => (
+            <a href={`/portfolio/${p.slug}`} class="group overflow-hidden rounded-lg border border-charcoal/10 bg-white">
+              {p.coverImage && (
+                <img src={p.coverImage} alt={p.title} class="aspect-video w-full object-cover" />
+              )}
+              <div class="p-5">
+                {p.category && (
+                  <span class="font-mono text-xs uppercase tracking-wide text-brick">{p.category}</span>
+                )}
+                <h3 class="mt-1 font-display text-base font-semibold text-charcoal group-hover:text-brick">{p.title}</h3>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {cities.length > 0 && (
+    <section class="py-16">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <p class="font-mono text-xs uppercase tracking-widest text-brick">Jangkauan</p>
+        <h2 class="mt-2 font-display text-2xl font-semibold text-charcoal">Kota yang kami layani</h2>
+
+        <div class="mt-6 flex flex-wrap gap-2">
+          {cities.map((city) => (
+            <span class="rounded-full border border-charcoal/15 bg-white px-4 py-1.5 text-sm text-charcoal/70">
+              {city}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {latestPosts.length > 0 && (
+    <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      <div class="mb-10 flex items-end justify-between">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-widest text-brick">Blog</p>
+          <h2 class="mt-2 font-display text-3xl font-semibold text-charcoal">Tulisan terbaru</h2>
+        </div>
+        <a href="/blog" class="hidden text-sm font-medium text-brick hover:underline sm:inline">Lihat semua →</a>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-3">
+        {latestPosts.map((post) => (
+          <a href={`/blog/${post.slug}`} class="group">
+            {post.coverImage && (
+              <img src={post.coverImage} alt={post.title} class="aspect-video w-full rounded-lg object-cover" />
+            )}
+            <h3 class="mt-3 font-display text-base font-semibold text-charcoal group-hover:text-brick">{post.title}</h3>
+            <p class="mt-1 text-sm text-charcoal/60 line-clamp-2">{post.excerpt}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="bg-brick py-16 text-bone">
+    <div class="mx-auto max-w-3xl px-4 text-center sm:px-6">
+      <h2 class="font-display text-3xl font-semibold">Siap punya website sendiri?</h2>
+      <p class="mt-3 text-bone/80">Ceritakan kebutuhan bisnis Anda, kami bantu wujudkan dalam bentuk website.</p>
+
+      {settings.social_whatsapp && (
+        <a
+          href={`https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-8 inline-block rounded-full bg-bone px-8 py-3 text-sm font-medium text-brick hover:opacity-90"
+        >
+          Mulai Konsultasi
+        </a>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<script define:vars={{ exampleSlugs }}>
+  const el = document.getElementById('typewriter');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (el && exampleSlugs.length > 0 && !prefersReducedMotion) {
+    let slugIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
+    function tick() {
+      const current = exampleSlugs[slugIndex];
+
+      if (!deleting) {
+        charIndex++;
+        el.textContent = current.slice(0, charIndex);
+        if (charIndex === current.length) {
+          deleting = true;
+          setTimeout(tick, 1400);
+          return;
+        }
+      } else {
+        charIndex--;
+        el.textContent = current.slice(0, charIndex);
+        if (charIndex === 0) {
+          deleting = false;
+          slugIndex = (slugIndex + 1) % exampleSlugs.length;
+        }
+      }
+
+      setTimeout(tick, deleting ? 30 : 60);
+    }
+
+    tick();
+  } else if (el && exampleSlugs.length > 0) {
+    el.textContent = exampleSlugs[0];
+  }
+</script>

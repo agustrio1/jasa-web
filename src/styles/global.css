@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-ink: #17140f;
+  --color-bone: #efe7d8;
+  --color-brass: #c89b3c;
+  --color-brick: #8b3a2b;
+  --color-charcoal: #2b2620;
+
+  --font-display: "Fraunces", ui-serif, serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+body {
+  background-color: var(--color-bone);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+}

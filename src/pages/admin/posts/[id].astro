@@ -1,0 +1,45 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import PostForm from '@/components/admin/PostForm.tsx';
+import { db } from '@/lib/db';
+import { posts } from '@/lib/db/schema/blog';
+import { eq } from 'drizzle-orm';
+
+const { id } = Astro.params;
+const post = await db.query.posts.findFirst({
+  where: eq(posts.id, id!),
+  with: { postTags: true },
+});
+
+if (!post) {
+  return Astro.redirect('/admin/posts');
+}
+
+const categories = await db.query.categories.findMany();
+const tags = await db.query.tags.findMany();
+---
+
+<AdminLayout title="Edit Post">
+  <section class="mx-auto max-w-2xl p-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Edit Post</h1>
+    <div class="mt-6">
+      <PostForm
+        client:load
+        categories={categories}
+        tags={tags}
+        initial={{
+          id: post.id,
+          title: post.title,
+          slug: post.slug,
+          excerpt: post.excerpt ?? '',
+          content: post.content,
+          coverImage: post.coverImage ?? '',
+          categoryId: post.categoryId ?? '',
+          tagIds: post.postTags.map((pt) => pt.tagId),
+          faq: (post.faq as { question: string; answer: string }[]) ?? [],
+          isPublished: post.isPublished,
+        }}
+      />
+    </div>
+  </section>
+</AdminLayout>

@@ -1,0 +1,15 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import TwoFactorSetup from '@/components/admin/TwoFactorSetup.tsx';
+
+const user = Astro.locals.user!;
+---
+
+<AdminLayout title="Keamanan">
+  <section class="mx-auto max-w-md p-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Keamanan</h1>
+    <div class="mt-6">
+      <TwoFactorSetup client:load twoFactorEnabled={user.twoFactorEnabled} />
+    </div>
+  </section>
+</AdminLayout>

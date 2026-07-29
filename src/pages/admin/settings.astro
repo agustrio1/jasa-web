@@ -1,0 +1,85 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { getSettings, updateSettings } from '@/lib/services/settings.service';
+
+const SETTING_KEYS = [
+  'site_name', 'site_default_meta_title', 'site_default_meta_description',
+  'homepage_featured_count',
+  'ga_property_id', 'ga_service_account_json',
+  'social_facebook', 'social_instagram', 'social_tiktok', 'social_whatsapp',
+];
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const values = Object.fromEntries(
+    SETTING_KEYS.map((key) => [key, String(form.get(key) ?? '')])
+  );
+  await updateSettings(values);
+}
+
+const current = await getSettings(SETTING_KEYS);
+---
+
+<AdminLayout title="Settings">
+  <section class="mx-auto max-w-2xl p-4 sm:p-6">
+    <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Settings</h1>
+
+    <form method="POST" class="mt-6 space-y-6">
+      <div>
+        <h2 class="text-sm font-medium text-gray-700">Umum</h2>
+        <div class="mt-2 space-y-3">
+          <input name="site_name" placeholder="Nama Situs (judul website)" value={current.site_name}
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <input name="site_default_meta_title" placeholder="Default Meta Title" value={current.site_default_meta_title}
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <textarea name="site_default_meta_description" placeholder="Default Meta Description"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm">{current.site_default_meta_description}</textarea>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="text-sm font-medium text-gray-700">Homepage</h2>
+        <div class="mt-2">
+          <label class="text-xs text-gray-500">Jumlah proyek unggulan yang ditampilkan</label>
+          <input
+            type="number"
+            name="homepage_featured_count"
+            min="1"
+            max="12"
+            placeholder="3"
+            value={current.homepage_featured_count || '3'}
+            class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm sm:w-32"
+          />
+        </div>
+      </div>
+
+      <div>
+        <h2 class="text-sm font-medium text-gray-700">Google Analytics</h2>
+        <div class="mt-2 space-y-3">
+          <input name="ga_property_id" placeholder="GA4 Property ID" value={current.ga_property_id}
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <textarea name="ga_service_account_json" placeholder="Service Account JSON"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono text-xs">{current.ga_service_account_json}</textarea>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="text-sm font-medium text-gray-700">Sosial Media</h2>
+        <div class="mt-2 space-y-3">
+          <input name="social_facebook" placeholder="Facebook URL" value={current.social_facebook}
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <input name="social_instagram" placeholder="Instagram URL" value={current.social_instagram}
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <input name="social_tiktok" placeholder="TikTok URL" value={current.social_tiktok}
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+          <input name="social_whatsapp" placeholder="Nomor WhatsApp" value={current.social_whatsapp}
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm" />
+        </div>
+      </div>
+
+      <button type="submit" class="rounded-md bg-gray-900 px-4 py-2 text-sm text-white">
+        Simpan
+      </button>
+    </form>
+  </section>
+</AdminLayout>

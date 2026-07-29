@@ -1,0 +1,69 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import Pagination from '@/components/admin/Pagination.tsx';
+import DeleteButton from '@/components/admin/DeleteButton.tsx';
+import { getLeadsPaginated, markLeadAsRead } from '@/lib/services/lead.service';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const id = String(form.get('id'));
+  await markLeadAsRead(id);
+  return Astro.redirect(Astro.url.pathname + Astro.url.search);
+}
+
+const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1);
+const { items: leadList, totalPages, total, unread } = await getLeadsPaginated(page);
+---
+
+<AdminLayout title="Pesan Masuk">
+  <section class="p-4 sm:p-6">
+    <div class="flex items-center gap-3">
+      <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Pesan Masuk</h1>
+      <span class="text-sm text-gray-500">{total} total</span>
+      {unread > 0 && (
+        <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+          {unread} belum dibaca
+        </span>
+      )}
+    </div>
+
+    <div class="mt-6 space-y-3">
+      {leadList.length === 0 && (
+        <p class="rounded-md border border-gray-200 p-6 text-center text-sm text-gray-400">Belum ada pesan masuk</p>
+      )}
+      {leadList.map((lead) => (
+        <div class={`rounded-md border p-4 ${lead.isRead ? 'border-gray-200' : 'border-gray-900 bg-gray-50'}`}>
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="font-medium text-gray-900">{lead.name}</p>
+                {!lead.isRead && <span class="h-2 w-2 rounded-full bg-red-500"></span>}
+              </div>
+              <p class="text-sm text-gray-500">{lead.email}{lead.phone && ` · ${lead.phone}`}</p>
+              {lead.service && <p class="mt-1 text-xs text-gray-400">Tertarik: {lead.service}</p>}
+            </div>
+            <DeleteButton client:load endpoint={`/api/admin/leads/${lead.id}`} confirmMessage="Hapus pesan ini?" />
+          </div>
+
+          {lead.message && (
+            <p class="mt-3 text-sm text-gray-700">{lead.message}</p>
+          )}
+
+          <div class="mt-3 flex items-center justify-between">
+            <p class="text-xs text-gray-400">{new Date(lead.createdAt).toLocaleString('id-ID')}</p>
+            {!lead.isRead && (
+              <form method="POST">
+                <input type="hidden" name="id" value={lead.id} />
+                <button type="submit" class="text-xs font-medium text-blue-600 hover:underline">
+                  Tandai dibaca
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <Pagination client:load page={page} totalPages={totalPages} baseUrl="/admin/leads" />
+  </section>
+</AdminLayout>

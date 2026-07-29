@@ -1,0 +1,34 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { getPublishedPortfolios } from '@/lib/services/portfolio.service';
+
+const portfolios = await getPublishedPortfolios();
+---
+
+<Layout title="Portofolio Kami" description="Kumpulan proyek website yang telah kami kerjakan untuk berbagai klien.">
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-xs uppercase tracking-widest text-brick">Portofolio</p>
+    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Proyek yang telah kami kerjakan</h1>
+
+    {portfolios.length === 0 ? (
+      <p class="mt-10 text-sm text-charcoal/50">Belum ada proyek yang ditampilkan.</p>
+    ) : (
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {portfolios.map((p) => (
+          <a href={`/portfolio/${p.slug}`} class="group overflow-hidden rounded-lg border border-charcoal/10 bg-white/40">
+            {p.coverImage && (
+              <img src={p.coverImage} alt={p.title} class="aspect-video w-full object-cover" />
+            )}
+            <div class="p-5">
+              {p.category && (
+                <span class="font-mono text-xs uppercase tracking-wide text-brick">{p.category}</span>
+              )}
+              <h2 class="mt-1 font-display text-lg font-semibold text-charcoal group-hover:text-brick">{p.title}</h2>
+              {p.clientName && <p class="mt-1 text-sm text-charcoal/50">{p.clientName}</p>}
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+  </section>
+</Layout>

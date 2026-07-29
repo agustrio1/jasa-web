@@ -1,0 +1,16 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import MediaLibrary from '@/components/admin/MediaLibrary.tsx';
+import { getAllMedia } from '@/lib/services/media.service';
+
+const mediaList = await getAllMedia();
+---
+
+<AdminLayout title="Media">
+  <section class="p-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Media</h1>
+    <div class="mt-6">
+      <MediaLibrary client:load initialMedia={mediaList} />
+    </div>
+  </section>
+</AdminLayout>

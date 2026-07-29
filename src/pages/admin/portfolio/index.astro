@@ -1,0 +1,52 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import Pagination from '@/components/admin/Pagination.tsx';
+import DeleteButton from '@/components/admin/DeleteButton.tsx';
+import { getPortfoliosPaginated } from '@/lib/services/portfolio.service';
+
+const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1);
+const { items: portfolios, totalPages, total } = await getPortfoliosPaginated(page);
+---
+
+<AdminLayout title="Portofolio">
+  <section class="p-4 sm:p-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-3">
+        <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Portofolio</h1>
+        <span class="text-sm text-gray-500">{total} total</span>
+      </div>
+      <a href="/admin/portfolio/new" class="w-full rounded-md bg-gray-900 px-4 py-2 text-center text-sm text-white sm:w-auto">
+        Tambah Proyek
+      </a>
+    </div>
+
+    <div class="mt-6 divide-y divide-gray-200 rounded-md border border-gray-200">
+      {portfolios.length === 0 && (
+        <p class="p-6 text-center text-sm text-gray-400">Belum ada portofolio</p>
+      )}
+      {portfolios.map((p) => (
+        <div class="flex items-center justify-between gap-3 p-3">
+          <a href={`/admin/portfolio/${p.id}`} class="flex min-w-0 flex-1 items-center gap-3">
+            {p.coverImage && (
+              <img src={p.coverImage} alt={p.title} class="h-12 w-12 shrink-0 rounded-md object-cover" />
+            )}
+            <div class="min-w-0">
+              <p class="truncate font-medium text-gray-900">{p.title}</p>
+              <p class="truncate text-sm text-gray-500">
+                {p.isPublished ? (
+                  <span class="text-green-600">Terbit</span>
+                ) : (
+                  <span class="text-gray-400">Draft</span>
+                )} · {p.category || 'Tanpa kategori'}
+                {p.isFeatured && ' · ⭐ Unggulan'}
+              </p>
+            </div>
+          </a>
+          <DeleteButton client:load endpoint={`/api/admin/portfolio/${p.id}`} confirmMessage={`Hapus proyek "${p.title}"?`} />
+        </div>
+      ))}
+    </div>
+
+    <Pagination client:load page={page} totalPages={totalPages} baseUrl="/admin/portfolio" />
+  </section>
+</AdminLayout>

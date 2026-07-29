@@ -1,0 +1,78 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { getPostBySlug } from '@/lib/services/post.service';
+import { resolveSeo } from '@/lib/seo/resolve-seo';
+import { renderRichContent } from '@/lib/tiptap/render';
+import { blogPostingJsonLd, faqJsonLd } from '@/lib/seo/json-ld';
+
+const { slug } = Astro.params;
+const post = await getPostBySlug(slug!);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const seo = await resolveSeo('post', post.id, {
+  title: post.title,
+  description: post.excerpt ?? '',
+  ogImage: post.coverImage ?? undefined,
+});
+
+const contentHtml = renderRichContent(post.content);
+
+const jsonLdBlocks: Record<string, unknown>[] = [
+  blogPostingJsonLd({
+    title: post.title,
+    description: post.excerpt ?? '',
+    url: Astro.url.href,
+    image: post.coverImage ?? undefined,
+    datePublished: post.publishedAt ?? post.createdAt,
+    dateModified: post.updatedAt,
+    authorName: 'Admin',
+  }),
+];
+
+if (post.faq && Array.isArray(post.faq) && post.faq.length > 0) {
+  jsonLdBlocks.push(faqJsonLd(post.faq as { question: string; answer: string }[]));
+}
+---
+
+<Layout title={seo.title} description={seo.description} ogImage={seo.ogImage} jsonLd={jsonLdBlocks}>
+  <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+    {post.coverImage && (
+      <img src={post.coverImage} alt={post.title} class="mb-8 w-full rounded-lg object-cover" />
+    )}
+    <h1 class="font-display text-3xl font-semibold text-charcoal sm:text-4xl">{post.title}</h1>
+
+    <div class="mt-3 flex flex-wrap gap-2 text-sm text-charcoal/50">
+      {post.category && (
+        <a href={`/blog/kategori/${post.category.slug}`} class="hover:text-brick hover:underline">
+          {post.category.name}
+        </a>
+      )}
+      {post.postTags.map((pt: any) => (
+        <a href={`/blog/tag/${pt.tag.slug}`} class="hover:text-brick hover:underline">
+          #{pt.tag.name}
+        </a>
+      ))}
+    </div>
+
+    {contentHtml && (
+      <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
+    )}
+
+    {post.faq && Array.isArray(post.faq) && post.faq.length > 0 && (
+      <div class="mt-10 border-t border-charcoal/10 pt-8">
+        <h2 class="font-display text-xl font-semibold text-charcoal">Pertanyaan Umum</h2>
+        <div class="mt-4 space-y-4">
+          {(post.faq as { question: string; answer: string }[]).map((faq) => (
+            <details class="rounded-lg border border-charcoal/10 bg-white/40 p-4">
+              <summary class="cursor-pointer font-medium text-charcoal">{faq.question}</summary>
+              <p class="mt-2 text-sm text-charcoal/60">{faq.answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    )}
+  </article>
+</Layout>

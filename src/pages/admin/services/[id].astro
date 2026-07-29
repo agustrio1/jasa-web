@@ -1,0 +1,42 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import ServiceForm from '@/components/admin/ServiceForm.tsx';
+import { db } from '@/lib/db';
+import { services } from '@/lib/db/schema/services';
+import { eq } from 'drizzle-orm';
+
+const { id } = Astro.params;
+const service = await db.query.services.findFirst({
+  where: eq(services.id, id!),
+  with: { locations: true },
+});
+
+if (!service) {
+  return Astro.redirect('/admin/services');
+}
+---
+
+<AdminLayout title="Edit Layanan">
+  <section class="mx-auto max-w-2xl p-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Edit Layanan</h1>
+    <div class="mt-6">
+      <ServiceForm
+        client:load
+        initial={{
+          id: service.id,
+          name: service.name,
+          slug: service.slug,
+          shortDescription: service.shortDescription ?? '',
+          content: service.content,
+          icon: service.icon ?? '',
+          locations: service.locations.map((l) => ({
+            city: l.city,
+            slug: l.slug,
+            metaTitle: l.metaTitle ?? '',
+            metaDescription: l.metaDescription ?? '',
+          })),
+        }}
+      />
+    </div>
+  </section>
+</AdminLayout>

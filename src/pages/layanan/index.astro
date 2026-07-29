@@ -1,0 +1,32 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { getAllServices } from '@/lib/services/service.service';
+
+const services = await getAllServices();
+---
+
+<Layout title="Layanan Kami" description="Jasa pembuatan website profesional untuk berbagai kebutuhan bisnis.">
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-xs uppercase tracking-widest text-brick">Layanan</p>
+    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Yang bisa kami bangun untuk Anda</h1>
+
+    {services.length === 0 ? (
+      <p class="mt-10 text-sm text-charcoal/50">Belum ada layanan yang ditampilkan.</p>
+    ) : (
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {services.map((s) => (
+          <a href={`/layanan/${s.slug}`} class="group rounded-lg border border-charcoal/10 bg-white/40 p-6 hover:border-brick/40">
+            <h2 class="font-display text-lg font-semibold text-charcoal group-hover:text-brick">{s.name}</h2>
+            <p class="mt-2 text-sm leading-relaxed text-charcoal/60">{s.shortDescription}</p>
+
+            {s.locations?.length > 0 && (
+              <p class="mt-4 font-mono text-xs text-charcoal/40">
+                Tersedia di {s.locations.length} kota
+              </p>
+            )}
+          </a>
+        ))}
+      </div>
+    )}
+  </section>
+</Layout>

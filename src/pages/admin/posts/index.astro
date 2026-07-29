@@ -1,0 +1,47 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import Pagination from '@/components/admin/Pagination.tsx';
+import DeleteButton from '@/components/admin/DeleteButton.tsx';
+import { getPostsPaginated } from '@/lib/services/post.service';
+
+const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1);
+const { items: posts, totalPages, total } = await getPostsPaginated(page);
+---
+
+<AdminLayout title="Blog">
+  <section class="p-4 sm:p-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-3">
+        <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Blog</h1>
+        <span class="text-sm text-gray-500">{total} total</span>
+      </div>
+      <a href="/admin/posts/new" class="w-full rounded-md bg-gray-900 px-4 py-2 text-center text-sm text-white sm:w-auto">
+        Tulis Post
+      </a>
+    </div>
+
+    <div class="mt-6 divide-y divide-gray-200 rounded-md border border-gray-200">
+      {posts.length === 0 && (
+        <p class="p-6 text-center text-sm text-gray-400">Belum ada post</p>
+      )}
+      {posts.map((p) => (
+        <div class="flex items-center justify-between gap-3 p-3">
+          <a href={`/admin/posts/${p.id}`} class="min-w-0 flex-1">
+            <p class="truncate font-medium text-gray-900">{p.title}</p>
+            <p class="truncate text-sm text-gray-500">
+              {p.isPublished ? (
+                <span class="text-green-600">Terbit</span>
+              ) : (
+                <span class="text-gray-400">Draft</span>
+              )} · {p.category?.name ?? 'Tanpa kategori'}
+              {p.postTags.length > 0 && ` · ${p.postTags.map((pt) => pt.tag.name).join(', ')}`}
+            </p>
+          </a>
+          <DeleteButton client:load endpoint={`/api/admin/posts/${p.id}`} confirmMessage={`Hapus post "${p.title}"?`} />
+        </div>
+      ))}
+    </div>
+
+    <Pagination client:load page={page} totalPages={totalPages} baseUrl="/admin/posts" />
+  </section>
+</AdminLayout>

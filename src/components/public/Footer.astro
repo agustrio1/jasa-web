@@ -1,0 +1,84 @@
+---
+import { getSettings } from '@/lib/services/settings.service';
+
+const settings = await getSettings([
+  'site_name',
+  'site_default_meta_description',
+  'social_facebook',
+  'social_instagram',
+  'social_tiktok',
+  'social_whatsapp',
+]);
+
+const siteName = settings.site_name || 'Nexaro Studio';
+const year = new Date().getFullYear();
+
+const SOCIALS = [
+  { key: 'social_facebook', label: 'Facebook', path: 'M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z' },
+  { key: 'social_instagram', label: 'Instagram', path: 'M12 8a4 4 0 100 8 4 4 0 000-8zm0 0v0M4 4h16v16H4V4zm12.5 3.5h.01' },
+  { key: 'social_tiktok', label: 'TikTok', path: 'M9 12a4 4 0 104 4V4a5 5 0 005 5' },
+].filter((s) => settings[s.key]);
+
+const FOOTER_LINKS = [
+  { label: 'Beranda', href: '/' },
+  { label: 'Layanan', href: '/layanan' },
+  { label: 'Blog', href: '/blog' },
+];
+---
+
+<footer class="border-t border-brass/20 bg-ink text-bone">
+  <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <div class="grid gap-10 sm:grid-cols-3">
+      <div>
+        <p class="font-display text-lg font-semibold text-bone">{siteName}</p>
+        <p class="mt-3 text-sm leading-relaxed text-bone/60">
+          {settings.site_default_meta_description || 'Membangun website yang rapi dan siap dipakai, kota demi kota.'}
+        </p>
+      </div>
+
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wider text-brass">Navigasi</p>
+        <ul class="mt-3 space-y-2">
+          {FOOTER_LINKS.map((link) => (
+            <li>
+              <a href={link.href} class="text-sm text-bone/70 hover:text-brass">{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <p class="text-xs font-medium uppercase tracking-wider text-brass">Terhubung</p>
+        <div class="mt-3 flex gap-3">
+          {SOCIALS.map((s) => (
+            <a
+              href={settings[s.key]}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label}
+              class="flex h-9 w-9 items-center justify-center rounded-full border border-bone/20 text-bone/70 hover:border-brass hover:text-brass"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d={s.path} />
+              </svg>
+            </a>
+          ))}
+        </div>
+        {settings.social_whatsapp && (
+          <a
+            href={`https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="mt-4 inline-block font-mono text-sm text-brass hover:underline"
+          >
+            {settings.social_whatsapp}
+          </a>
+        )}
+      </div>
+    </div>
+
+    <div class="mt-10 border-t border-bone/10 pt-6 text-xs text-bone/40">
+      © {year} {siteName}. Semua hak cipta dilindungi.
+    </div>
+  </div>
+</footer>

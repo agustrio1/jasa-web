@@ -1,0 +1,36 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import PortfolioForm from '@/components/admin/PortfolioForm.tsx';
+import { getPortfolioById } from '@/lib/services/portfolio.service';
+
+const { id } = Astro.params;
+const portfolio = await getPortfolioById(id!);
+
+if (!portfolio) {
+  return Astro.redirect('/admin/portfolio');
+}
+---
+
+<AdminLayout title="Edit Proyek">
+  <section class="mx-auto max-w-2xl p-4 sm:p-6">
+    <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Edit Proyek</h1>
+    <div class="mt-6">
+      <PortfolioForm
+        client:load
+        initial={{
+          id: portfolio.id,
+          title: portfolio.title,
+          slug: portfolio.slug,
+          clientName: portfolio.clientName ?? '',
+          category: portfolio.category ?? '',
+          coverImage: portfolio.coverImage ?? '',
+          content: portfolio.content,
+          technologies: (portfolio.technologies as string[]) ?? [],
+          projectUrl: portfolio.projectUrl ?? '',
+          isFeatured: portfolio.isFeatured,
+          isPublished: portfolio.isPublished,
+        }}
+      />
+    </div>
+  </section>
+</AdminLayout>

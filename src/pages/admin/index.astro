@@ -1,0 +1,52 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import { db } from '@/lib/db';
+import { services } from '@/lib/db/schema/services';
+import { posts } from '@/lib/db/schema/blog';
+import { media } from '@/lib/db/schema/media';
+import { getVisitorsSummary } from '@/lib/analytics/analytics.service';
+
+const [allServices, allPosts, allMedia, visitors] = await Promise.all([
+  db.query.services.findMany(),
+  db.query.posts.findMany(),
+  db.query.media.findMany(),
+  getVisitorsSummary(7),
+]);
+
+const publishedPosts = allPosts.filter((p) => p.isPublished).length;
+const todayVisitors = visitors?.at(-1)?.activeUsers ?? null;
+
+const stats = [
+  { label: 'Layanan', value: allServices.length, href: '/admin/services' },
+  { label: 'Post Terbit', value: `${publishedPosts}/${allPosts.length}`, href: '/admin/posts' },
+  { label: 'Media', value: allMedia.length, href: '/admin/media' },
+  { label: 'Pengunjung Hari Ini', value: todayVisitors ?? '—', href: '/admin/analytics' },
+];
+---
+
+<AdminLayout title="Dashboard">
+  <section class="p-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+
+    <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {stats.map((stat) => (
+        <a href={stat.href} class="rounded-lg border border-gray-200 p-4 hover:border-gray-400">
+          <p class="text-sm text-gray-500">{stat.label}</p>
+          <p class="mt-1 text-2xl font-semibold text-gray-900">{stat.value}</p>
+        </a>
+      ))}
+    </div>
+
+    <div class="mt-8">
+      <h2 class="text-sm font-medium text-gray-700">Aksi Cepat</h2>
+      <div class="mt-3 flex gap-3">
+        <a href="/admin/services/new" class="rounded-md bg-gray-900 px-4 py-2 text-sm text-white">
+          Tambah Layanan
+        </a>
+        <a href="/admin/posts/new" class="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700">
+          Tulis Post
+        </a>
+      </div>
+    </div>
+  </section>
+</AdminLayout>

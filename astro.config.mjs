@@ -1,0 +1,16 @@
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+import tailwindcss from '@tailwindcss/vite';
+import node from '@astrojs/node';
+
+export default defineConfig({
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
+  integrations: [react()],
+  image: {
+    service: { entrypoint: 'astro/assets/services/noop' },
+  },
+  vite: {
+    plugins: [tailwindcss()],
+  },
+});

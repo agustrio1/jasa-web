@@ -1,0 +1,17 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import PostForm from '@/components/admin/PostForm.tsx';
+import { db } from '@/lib/db';
+
+const categories = await db.query.categories.findMany();
+const tags = await db.query.tags.findMany();
+---
+
+<AdminLayout title="Tulis Post">
+  <section class="mx-auto max-w-2xl p-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Tulis Post</h1>
+    <div class="mt-6">
+      <PostForm client:load categories={categories} tags={tags} />
+    </div>
+  </section>
+</AdminLayout>

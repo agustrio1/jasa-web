@@ -1,0 +1,96 @@
+---
+import '@/styles/global.css';
+
+if (Astro.locals.user) {
+  return Astro.redirect('/admin');
+}
+---
+
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Admin</title>
+  </head>
+  <body class="bg-gray-50">
+    <div class="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
+      <h1 class="text-xl font-semibold text-gray-900">Login Admin</h1>
+
+      <form id="login-form" class="mt-6 space-y-4">
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          required
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+        />
+
+        <div id="two-factor-field" class="hidden">
+          <input
+            type="text"
+            name="twoFactorToken"
+            placeholder="Kode 2FA"
+            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          />
+        </div>
+
+        <p id="error-message" class="hidden text-sm text-red-600"></p>
+
+        <button
+          type="submit"
+          class="w-full rounded-md bg-gray-900 px-4 py-2 text-sm text-white"
+        >
+          Masuk
+        </button>
+      </form>
+    </div>
+
+    <script>
+      const form = document.getElementById('login-form') as HTMLFormElement;
+      const twoFactorField = document.getElementById('two-factor-field')!;
+      const errorMessage = document.getElementById('error-message')!;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMessage.classList.add('hidden');
+
+        const formData = new FormData(form);
+        const payload = {
+          email: formData.get('email'),
+          password: formData.get('password'),
+          twoFactorToken: formData.get('twoFactorToken') || undefined,
+        };
+
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (data.requiresTwoFactor) {
+          twoFactorField.classList.remove('hidden');
+          errorMessage.textContent = 'Masukkan kode 2FA dari aplikasi authenticator';
+          errorMessage.classList.remove('hidden');
+          return;
+        }
+
+        if (data.error) {
+          errorMessage.textContent = data.error;
+          errorMessage.classList.remove('hidden');
+          return;
+        }
+
+        window.location.href = '/admin';
+      });
+    </script>
+  </body>
+</html>

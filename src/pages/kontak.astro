@@ -1,0 +1,30 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import ContactForm from '@/components/public/ContactForm.tsx';
+import { getAllServices } from '@/lib/services/service.service';
+import { getSettings } from '@/lib/services/settings.service';
+
+const services = await getAllServices();
+const settings = await getSettings(['social_whatsapp']);
+---
+
+<Layout title="Hubungi Kami" description="Ceritakan kebutuhan website Anda, kami siap membantu.">
+  <section class="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-xs uppercase tracking-widest text-brick">Kontak</p>
+    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Ceritakan kebutuhan Anda</h1>
+    <p class="mt-3 text-charcoal/60">Isi form di bawah, atau langsung chat kami lewat WhatsApp.</p>
+
+    <div class="mt-10">
+      <ContactForm client:load services={services.map((s) => ({ name: s.name }))} />
+    </div>
+
+    {settings.social_whatsapp && (
+      <div class="mt-6 flex items-center gap-2 text-sm text-charcoal/50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        atau chat langsung: <a href={`https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" class="font-medium text-brick hover:underline">{settings.social_whatsapp}</a>
+      </div>
+    )}
+  </section>
+</Layout>

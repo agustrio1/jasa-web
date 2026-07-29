@@ -1,0 +1,13 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import PortfolioForm from '@/components/admin/PortfolioForm.tsx';
+---
+
+<AdminLayout title="Tambah Proyek">
+  <section class="mx-auto max-w-2xl p-4 sm:p-6">
+    <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Tambah Proyek</h1>
+    <div class="mt-6">
+      <PortfolioForm client:load />
+    </div>
+  </section>
+</AdminLayout>
