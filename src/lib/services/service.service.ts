@@ -66,6 +66,22 @@ export async function getServiceLocationBySlug(fullSlug: string) {
   });
 }
 
+export async function getFeaturedPackages(limit: number = 6) {
+  const allServices = await db.query.services.findMany({
+    where: eq(services.isActive, true),
+    with: { packages: { orderBy: (p, { asc }) => [asc(p.sortOrder)] } },
+  });
+
+  const flattened = allServices.flatMap((s) =>
+    s.packages.map((pkg) => ({ ...pkg, serviceName: s.name, serviceSlug: s.slug }))
+  );
+
+  const popular = flattened.filter((p) => p.isPopular);
+  const rest = flattened.filter((p) => !p.isPopular);
+
+  return [...popular, ...rest].slice(0, limit);
+}
+
 export async function isSlugTaken(slug: string, excludeId?: string) {
   const [existingService, existingLocation] = await Promise.all([
     db.query.services.findFirst({ where: eq(services.slug, slug) }),
