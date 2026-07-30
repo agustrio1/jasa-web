@@ -147,12 +147,48 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     </div>
   </section>
 
-  {renderRichContent(pkg.features) && (
+  {featuredPackages.length > 0 && (
+    <section id="harga" class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+      <div class="mx-auto mb-14 max-w-2xl text-center">
+        <p class="font-mono text-xs uppercase tracking-widest text-brick">Harga</p>
+        <h2 class="mt-2 font-display text-3xl font-semibold text-charcoal">Pilih paket sesuai kebutuhan bisnis Anda</h2>
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {featuredPackages.map((pkg: any) => (
+          <div class={`relative rounded-lg border p-6 ${pkg.isPopular ? 'border-brass bg-ink text-bone' : 'border-charcoal/10 bg-white'}`}>
+            {pkg.isPopular && (
+              <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brass px-3 py-1 text-xs font-medium text-ink">
+                Paling Diminati
+              </span>
+            )}
+            <p class={`font-mono text-xs uppercase tracking-wide ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>{pkg.serviceName}</p>
+            <h3 class={`mt-1 font-display text-lg font-semibold ${pkg.isPopular ? 'text-bone' : 'text-charcoal'}`}>{pkg.name}</h3>
+            <p class={`mt-3 text-2xl font-semibold ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>
+              {pkg.price}
+              {pkg.priceNote && <span class={`ml-1 text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}>{pkg.priceNote}</span>}
+            </p>
+
+            {renderRichContent(pkg.features) && (
               <div
                 class={`prose prose-sm mt-4 max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 ${pkg.isPopular ? 'prose-invert text-bone/80' : 'text-charcoal/70'}`}
                 set:html={renderRichContent(pkg.features)}
               />
             )}
+
+            <a
+              href={`/layanan/${pkg.serviceSlug}`}
+              class={`mt-6 block rounded-full px-4 py-2.5 text-center text-sm font-medium ${
+                pkg.isPopular ? 'bg-brass text-ink hover:opacity-90' : 'border border-charcoal/20 text-charcoal hover:border-brick hover:text-brick'
+              }`}
+            >
+              Lihat Detail
+            </a>
+          </div>
+        ))}
+      </div>
+    </section>
+  )}
 
   {featuredPortfolios.length > 0 && (
     <section class="bg-charcoal/5 py-20">
@@ -220,7 +256,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       </div>
     </section>
   )}
-  
+
   <section class="mx-auto max-w-3xl px-4 py-20 sm:px-6">
     <div class="mx-auto mb-10 max-w-2xl text-center">
       <p class="font-mono text-xs uppercase tracking-widest text-brick">FAQ</p>
