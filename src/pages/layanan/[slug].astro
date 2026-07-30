@@ -33,7 +33,10 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 const finalDescription = seo.description || baseDescription;
 
 const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
-const packages = service.packages ?? [];
+const packages = (service.packages ?? []).map((pkg: any) => ({
+  ...pkg,
+  featuresHtml: renderRichContent(pkg.features),
+}));
 const faqItems = (service.faq as { question: string; answer: string }[]) ?? [];
 
 const jsonLdBlocks: Record<string, unknown>[] = [
@@ -88,17 +91,11 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
                 {pkg.price}
                 {pkg.priceNote && <span class={`text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}> {pkg.priceNote}</span>}
               </p>
-              {pkg.features && (pkg.features as string[]).length > 0 && (
-                <ul class="mt-4 space-y-2">
-                  {(pkg.features as string[]).map((feature) => (
-                    <li class={`flex items-start gap-2 text-sm ${pkg.isPopular ? 'text-bone/80' : 'text-charcoal/70'}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" class={`mt-0.5 h-4 w-4 shrink-0 ${pkg.isPopular ? 'text-brass' : 'text-brick'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+              {pkg.featuresHtml && (
+                <div
+                  class={`prose prose-sm mt-4 max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 ${pkg.isPopular ? 'prose-invert text-bone/80' : 'text-charcoal/70'}`}
+                  set:html={pkg.featuresHtml}
+                />
               )}
               <a
                 href="/kontak"

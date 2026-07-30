@@ -39,7 +39,7 @@ if (!service) {
             name: p.name,
             price: p.price,
             priceNote: p.priceNote ?? '',
-            features: (p.features as string[]) ?? [],
+            features: p.features,
             isPopular: p.isPopular,
           })),
           faq: (service.faq as { question: string; answer: string }[]) ?? [],

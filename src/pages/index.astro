@@ -7,6 +7,7 @@ import { getPublishedPosts } from '@/lib/services/post.service';
 import { getFeaturedPortfolios, getPublishedPortfolios } from '@/lib/services/portfolio.service';
 import { getSettings } from '@/lib/services/settings.service';
 import { organizationJsonLd } from '@/lib/seo/json-ld';
+import { renderRichContent } from '@/lib/tiptap/render';
 
 const services = await getAllServices();
 const latestPosts = (await getPublishedPosts()).slice(0, 3);
@@ -146,54 +147,12 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     </div>
   </section>
 
-  {featuredPackages.length > 0 && (
-    <section id="harga" class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-      <div class="mx-auto mb-14 max-w-2xl text-center">
-        <p class="font-mono text-xs uppercase tracking-widest text-brick">Harga</p>
-        <h2 class="mt-2 font-display text-3xl font-semibold text-charcoal">Pilih paket sesuai kebutuhan bisnis Anda</h2>
-      </div>
-
-      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {featuredPackages.map((pkg: any) => (
-          <div class={`relative rounded-lg border p-6 ${pkg.isPopular ? 'border-brass bg-ink text-bone' : 'border-charcoal/10 bg-white'}`}>
-            {pkg.isPopular && (
-              <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brass px-3 py-1 text-xs font-medium text-ink">
-                Paling Diminati
-              </span>
+  {renderRichContent(pkg.features) && (
+              <div
+                class={`prose prose-sm mt-4 max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 ${pkg.isPopular ? 'prose-invert text-bone/80' : 'text-charcoal/70'}`}
+                set:html={renderRichContent(pkg.features)}
+              />
             )}
-            <p class={`font-mono text-xs uppercase tracking-wide ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>{pkg.serviceName}</p>
-            <h3 class={`mt-1 font-display text-lg font-semibold ${pkg.isPopular ? 'text-bone' : 'text-charcoal'}`}>{pkg.name}</h3>
-            <p class={`mt-3 text-2xl font-semibold ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>
-              {pkg.price}
-              {pkg.priceNote && <span class={`ml-1 text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}>{pkg.priceNote}</span>}
-            </p>
-
-            {pkg.features && (pkg.features as string[]).length > 0 && (
-              <ul class="mt-4 space-y-2">
-                {(pkg.features as string[]).slice(0, 6).map((feature) => (
-                  <li class={`flex items-start gap-2 text-sm ${pkg.isPopular ? 'text-bone/80' : 'text-charcoal/70'}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" class={`mt-0.5 h-4 w-4 shrink-0 ${pkg.isPopular ? 'text-brass' : 'text-brick'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <a
-              href={`/layanan/${pkg.serviceSlug}`}
-              class={`mt-6 block rounded-full px-4 py-2.5 text-center text-sm font-medium ${
-                pkg.isPopular ? 'bg-brass text-ink hover:opacity-90' : 'border border-charcoal/20 text-charcoal hover:border-brick hover:text-brick'
-              }`}
-            >
-              Lihat Detail
-            </a>
-          </div>
-        ))}
-      </div>
-    </section>
-  )}
 
   {featuredPortfolios.length > 0 && (
     <section class="bg-charcoal/5 py-20">

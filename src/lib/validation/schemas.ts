@@ -27,7 +27,7 @@ const packageInputSchema = z.object({
   name: z.string().trim().min(1, 'Nama paket wajib diisi').max(100),
   price: z.string().trim().min(1, 'Harga wajib diisi').max(50),
   priceNote: z.string().trim().max(100).optional(),
-  features: z.array(z.string()).default([]),
+  features: z.unknown().optional(),
   isPopular: z.boolean().default(false),
 });
 

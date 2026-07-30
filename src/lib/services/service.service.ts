@@ -10,9 +10,11 @@ type PackageInput = {
   name: string;
   price: string;
   priceNote?: string;
-  features?: string[];
+  features?: unknown;
   isPopular?: boolean;
 };
+
+type FaqInput = { question: string; answer: string };
 
 export async function getAllServices() {
   return db.query.services.findMany({
@@ -94,7 +96,7 @@ export async function isSlugTaken(slug: string, excludeId?: string) {
 }
 
 export async function createServiceWithLocations(
-  input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string },
+  input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string; faq?: FaqInput[] },
   locations: Array<{ city: string; slug: string; metaTitle?: string; metaDescription?: string }>,
   packages: PackageInput[] = []
 ) {
@@ -106,6 +108,7 @@ export async function createServiceWithLocations(
     slug: input.slug,
     shortDescription: input.shortDescription,
     content: input.content,
+    faq: input.faq ?? [],
     icon: input.icon,
   });
 
@@ -130,7 +133,7 @@ export async function createServiceWithLocations(
         name: pkg.name,
         price: pkg.price,
         priceNote: pkg.priceNote,
-        features: pkg.features ?? [],
+        features: pkg.features ?? null,
         isPopular: pkg.isPopular ?? false,
         sortOrder: index,
       }))
@@ -142,7 +145,7 @@ export async function createServiceWithLocations(
 
 export async function updateServiceWithLocations(
   serviceId: string,
-  input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string },
+  input: { name: string; slug: string; shortDescription?: string; content?: unknown; icon?: string; faq?: FaqInput[] },
   locations: Array<{ id?: string; city: string; slug: string; metaTitle?: string; metaDescription?: string }>,
   packages: PackageInput[] = []
 ) {
@@ -151,6 +154,7 @@ export async function updateServiceWithLocations(
     slug: input.slug,
     shortDescription: input.shortDescription,
     content: input.content,
+    faq: input.faq ?? [],
     icon: input.icon,
     updatedAt: new Date(),
   }).where(eq(services.id, serviceId));
@@ -180,7 +184,7 @@ export async function updateServiceWithLocations(
         name: pkg.name,
         price: pkg.price,
         priceNote: pkg.priceNote,
-        features: pkg.features ?? [],
+        features: pkg.features ?? null,
         isPopular: pkg.isPopular ?? false,
         sortOrder: index,
       }))

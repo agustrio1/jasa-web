@@ -3,6 +3,7 @@ export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
 import { getAllServices } from '@/lib/services/service.service';
+import { renderRichContent } from '@/lib/tiptap/render';
 import { db } from '@/lib/db';
 
 const services = await getAllServices();
@@ -13,7 +14,13 @@ const servicesWithPackages = await Promise.all(
       where: (svc, { eq }) => eq(svc.id, s.id),
       with: { packages: { orderBy: (p, { asc }) => [asc(p.sortOrder)] } },
     });
-    return { ...s, startingPackage: full?.packages?.[0] ?? null };
+    const startingPackage = full?.packages?.[0] ?? null;
+    return {
+      ...s,
+      startingPackage: startingPackage
+        ? { ...startingPackage, featuresHtml: renderRichContent(startingPackage.features) }
+        : null,
+    };
   })
 );
 
@@ -51,17 +58,11 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
               )}
             </div>
 
-            {s.startingPackage?.features && (s.startingPackage.features as string[]).length > 0 && (
-              <ul class="mt-4 flex-1 space-y-2">
-                {(s.startingPackage.features as string[]).slice(0, 5).map((feature) => (
-                  <li class="flex items-start gap-2 text-sm text-charcoal/70">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-0.5 h-4 w-4 shrink-0 text-brick" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+            {s.startingPackage?.featuresHtml && (
+              <div
+                class="prose prose-sm mt-4 max-w-none flex-1 text-charcoal/70 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
+                set:html={s.startingPackage.featuresHtml}
+              />
             )}
 
             {s.locations?.length > 0 && (
