@@ -93,7 +93,8 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
   {/* SECTION 2: Pilihan Paket (Lebar/max-w-6xl agar di laptop muat 3 kolom sejajar) */}
   {packages.length > 0 && (
     <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-      <div class="mx-auto max-w-3xl mb-6">
+      {/* PERUBAHAN DI SINI: Judul section dibuat text-center */}
+      <div class="mx-auto max-w-3xl mb-10 text-center">
         <h2 class="font-display text-2xl font-semibold text-charcoal">Pilihan Paket</h2>
       </div>
       
