@@ -3,6 +3,7 @@ export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
 import { getServiceBySlug, getServiceLocationBySlug } from '@/lib/services/service.service';
+import { getSettings } from '@/lib/services/settings.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
 import { renderRichContent } from '@/lib/tiptap/render';
 import { serviceJsonLd, faqJsonLd } from '@/lib/seo/json-ld';
@@ -20,6 +21,10 @@ if (!service) {
 if (!service) {
   return Astro.redirect('/404');
 }
+
+// Ambil settings untuk link WhatsApp otomatis seperti di index
+const settings = await getSettings(['site_name', 'social_whatsapp']);
+const siteName = settings.site_name || 'Nexaro Studio';
 
 const baseDescription = location
   ? (location.metaDescription || service.shortDescription || '')
@@ -53,6 +58,14 @@ if (faqItems.length > 0) {
   jsonLdBlocks.push(faqJsonLd(faqItems));
 }
 
+// Helper pembuat link WhatsApp persis seperti di index
+function packageWhatsappHref(packageName: string) {
+  if (!settings.social_whatsapp) return '/kontak';
+  const serviceTitle = location ? `${service?.name} di ${location.city}` : service?.name;
+  const message = `Halo ${siteName}, saya tertarik dengan paket ${packageName} untuk layanan ${serviceTitle}. Bisa dijelaskan lebih lanjut?`;
+  return `https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+}
+
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
@@ -75,35 +88,44 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten tidak tersedia.</p>
     )}
 
+    {/* PERUBAHAN TAMPILAN PAKET: SAMA SEPERTI INDEX */}
     {packages.length > 0 && (
-      <div class="mt-12">
+      <div class="mt-16">
         <h2 class="font-display text-2xl font-semibold text-charcoal">Pilihan Paket</h2>
-        <div class="mt-6 grid gap-4 sm:grid-cols-3">
+        {/* Menggunakan grid-cols-2 untuk menghindari terlalu sempit karena ada dalam max-w-3xl */}
+        <div class="mt-6 grid items-stretch gap-6 sm:grid-cols-2">
           {packages.map((pkg: any) => (
-            <div class={`relative rounded-lg border p-6 ${pkg.isPopular ? 'border-brass bg-ink text-bone' : 'border-charcoal/10 bg-white/40'}`}>
+            <div class={`flex h-full flex-col rounded-lg border p-6 ${pkg.isPopular ? 'border-brass bg-ink text-bone' : 'border-charcoal/10 bg-white'}`}>
               {pkg.isPopular && (
-                <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brass px-3 py-1 text-xs font-medium text-ink">
-                  Populer
+                <span class="mb-3 inline-block w-fit rounded-full bg-brass px-3 py-1 text-xs font-medium text-ink">
+                  Paling Diminati
                 </span>
               )}
-              <h3 class={`font-display text-lg font-semibold ${pkg.isPopular ? 'text-bone' : 'text-charcoal'}`}>{pkg.name}</h3>
-              <p class={`mt-2 text-2xl font-semibold ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>
+              <p class={`font-mono text-xs uppercase tracking-wide ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>{service.name}</p>
+              <h3 class={`mt-1 font-display text-lg font-semibold ${pkg.isPopular ? 'text-bone' : 'text-charcoal'}`}>{pkg.name}</h3>
+
+              <p class={`mt-3 text-xs ${pkg.isPopular ? 'text-bone/50' : 'text-charcoal/40'}`}>Mulai dari</p>
+              <p class={`text-2xl font-semibold ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>
                 {pkg.price}
-                {pkg.priceNote && <span class={`text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}> {pkg.priceNote}</span>}
+                {pkg.priceNote && <span class={`ml-1 text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}>{pkg.priceNote}</span>}
               </p>
+
               {pkg.featuresHtml && (
                 <div
-                  class={`prose prose-sm mt-4 max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 ${pkg.isPopular ? 'prose-invert text-bone/80' : 'text-charcoal/70'}`}
+                  class={`prose prose-sm mt-4 max-w-none flex-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 ${pkg.isPopular ? 'prose-invert text-bone/80' : 'text-charcoal/70'}`}
                   set:html={pkg.featuresHtml}
                 />
               )}
+
               <a
-                href="/kontak"
+                href={packageWhatsappHref(pkg.name)}
+                target={settings.social_whatsapp ? "_blank" : "_self"}
+                rel={settings.social_whatsapp ? "noopener noreferrer" : ""}
                 class={`mt-6 block rounded-full px-4 py-2.5 text-center text-sm font-medium ${
                   pkg.isPopular ? 'bg-brass text-ink hover:opacity-90' : 'border border-charcoal/20 text-charcoal hover:border-brick hover:text-brick'
                 }`}
               >
-                Pilih Paket Ini
+                Pesan Sekarang
               </a>
             </div>
           ))}
@@ -112,9 +134,9 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     )}
 
     {faqItems.length > 0 && (
-      <div class="mt-12 border-t border-charcoal/10 pt-8">
+      <div class="mt-16 border-t border-charcoal/10 pt-10">
         <h2 class="font-display text-2xl font-semibold text-charcoal">Pertanyaan Umum</h2>
-        <div class="mt-4 space-y-3">
+        <div class="mt-6 space-y-3">
           {faqItems.map((item) => (
             <details class="rounded-lg border border-charcoal/10 bg-white/40 p-4">
               <summary class="cursor-pointer font-medium text-charcoal">{item.question}</summary>
