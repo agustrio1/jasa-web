@@ -4,13 +4,15 @@ import MediaLibrary from '@/components/admin/MediaLibrary.tsx';
 import { getAllMedia } from '@/lib/services/media.service';
 
 const mediaList = await getAllMedia();
+// Ambil env di server side Astro (karena tanpa prefiks PUBLIC_, di sini aman dan terbaca)
+const publicKey = import.meta.env.IMAGEKIT_PUBLIC_KEY;
 ---
 
 <AdminLayout title="Media">
   <section class="p-6">
     <h1 class="text-2xl font-semibold text-gray-900">Media</h1>
     <div class="mt-6">
-      <MediaLibrary client:load initialMedia={mediaList} />
+      <MediaLibrary client:load initialMedia={mediaList} publicKey={publicKey} />
     </div>
   </section>
 </AdminLayout>

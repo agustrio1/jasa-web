@@ -3,9 +3,10 @@ import { upload } from '@imagekit/javascript';
 
 type Props = {
   onUploaded: (result: { fileId: string; url: string; thumbnailUrl: string; name: string }) => void;
+  publicKey: string;
 };
 
-export default function MediaUpload({ onUploaded }: Props) {
+export default function MediaUpload({ onUploaded, publicKey }: Props) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
@@ -21,7 +22,7 @@ export default function MediaUpload({ onUploaded }: Props) {
       const result = await upload({
         file,
         fileName: file.name,
-        publicKey: import.meta.env.PUBLIC_IMAGEKIT_PUBLIC_KEY,
+        publicKey: publicKey, // GUNAKAN PUBLIC KEY DARI PROPS
         signature: auth.signature,
         expire: auth.expire,
         token: auth.token,

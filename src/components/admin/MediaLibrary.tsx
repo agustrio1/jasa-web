@@ -12,9 +12,10 @@ type MediaItem = {
 
 type Props = {
   initialMedia: MediaItem[];
+  publicKey: string;
 };
 
-export default function MediaLibrary({ initialMedia }: Props) {
+export default function MediaLibrary({ initialMedia, publicKey }: Props) {
   const [mediaList, setMediaList] = useState<MediaItem[]>(initialMedia);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -55,7 +56,8 @@ export default function MediaLibrary({ initialMedia }: Props) {
 
   return (
     <div>
-      <MediaUpload onUploaded={handleUploaded} />
+      {/* Oper publicKey ke MediaUpload */}
+      <MediaUpload onUploaded={handleUploaded} publicKey={publicKey} />
 
       {mediaList.length === 0 ? (
         <p className="mt-8 text-center text-sm text-gray-400">Belum ada media</p>
