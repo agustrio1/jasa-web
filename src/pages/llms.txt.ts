@@ -57,6 +57,9 @@ ${postLines || '- Belum ada artikel yang dipublikasikan.'}
 `;
 
   return new Response(content, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600',
+    },
   });
 };
