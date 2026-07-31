@@ -12,6 +12,7 @@ const { slug } = Astro.params;
 const portfolio = await getPortfolioBySlug(slug!);
 
 if (!portfolio) {
+  Astro.response.headers.set('Cache-Control', 'no-store');
   return Astro.redirect('/404');
 }
 
