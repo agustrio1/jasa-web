@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { createLead } from '@/lib/services/lead.service';
+import { sendLeadNotification } from '@/lib/email/notify';
 import { contactSchema, formatZodError } from '@/lib/validation/schemas';
 
 export const POST: APIRoute = async ({ request }) => {
@@ -17,6 +18,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   await createLead(parsed.data);
+  await sendLeadNotification(parsed.data);
 
   return new Response(JSON.stringify({ success: true }), {
     headers: { 'Content-Type': 'application/json' },

@@ -1,0 +1,13 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import UserForm from '@/components/admin/UserForm.tsx';
+---
+
+<AdminLayout title="Tambah Admin">
+  <section class="mx-auto max-w-md p-4 sm:p-6">
+    <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Tambah Admin</h1>
+    <div class="mt-6">
+      <UserForm client:load />
+    </div>
+  </section>
+</AdminLayout>

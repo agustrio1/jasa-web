@@ -6,3 +6,4 @@ export * from './media';
 export * from './seo';
 export * from './portfolio';
 export * from './leads';
+export * from './testimonials';

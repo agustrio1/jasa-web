@@ -6,7 +6,16 @@ import { getAllServices } from '@/lib/services/service.service';
 import { renderRichContent } from '@/lib/tiptap/render';
 import { db } from '@/lib/db';
 
-const services = await getAllServices();
+const query = Astro.url.searchParams.get('q')?.trim().toLowerCase() ?? '';
+
+const allServices = await getAllServices();
+const services = query
+  ? allServices.filter(
+      (s) =>
+        s.name.toLowerCase().includes(query) ||
+        (s.shortDescription ?? '').toLowerCase().includes(query)
+    )
+  : allServices;
 
 const servicesWithPackages = await Promise.all(
   services.map(async (s) => {
@@ -35,8 +44,29 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <p class="mt-3 text-charcoal/60">Pilih layanan sesuai kebutuhan bisnis, lengkap dengan paket harga transparan.</p>
     </div>
 
+    <form method="GET" class="mx-auto mt-8 flex max-w-md gap-2">
+      <input
+        type="search"
+        name="q"
+        value={Astro.url.searchParams.get('q') ?? ''}
+        placeholder="Cari layanan..."
+        class="flex-1 rounded-md border border-charcoal/20 bg-white px-4 py-2 text-sm focus:border-brass focus:outline-none"
+      />
+      <button type="submit" class="rounded-md bg-charcoal px-4 py-2 text-sm text-bone hover:opacity-90">
+        Cari
+      </button>
+    </form>
+
+    {query && (
+      <p class="mx-auto mt-3 max-w-md text-center text-sm text-charcoal/50">
+        Menampilkan hasil untuk "{query}" — <a href="/layanan" class="text-brick hover:underline">reset</a>
+      </p>
+    )}
+
     {servicesWithPackages.length === 0 ? (
-      <p class="mt-10 text-center text-sm text-charcoal/50">Belum ada layanan yang ditampilkan.</p>
+      <p class="mt-10 text-center text-sm text-charcoal/50">
+        {query ? `Tidak ada layanan yang cocok dengan "${query}".` : 'Belum ada layanan yang ditampilkan.'}
+      </p>
     ) : (
       <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {servicesWithPackages.map((s) => (

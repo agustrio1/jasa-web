@@ -75,3 +75,20 @@ export const portfolioInputSchema = z.object({
 export function formatZodError(error: z.ZodError): string {
   return error.issues[0]?.message ?? 'Data yang dikirim tidak valid';
 }
+
+export const testimonialInputSchema = z.object({
+  name: z.string().trim().min(1, 'Nama wajib diisi').max(200),
+  role: z.string().trim().max(200).optional(),
+  company: z.string().trim().max(200).optional(),
+  quote: z.string().trim().min(1, 'Testimoni wajib diisi').max(1000),
+  avatar: z.string().trim().max(1000).optional(),
+  rating: z.number().min(1).max(5).default(5),
+  isFeatured: z.boolean().default(false),
+  isPublished: z.boolean().default(true),
+});
+
+export const createUserSchema = z.object({
+  name: z.string().trim().min(1, 'Nama wajib diisi').max(200),
+  email: z.string().email('Format email tidak valid'),
+  password: z.string().min(8, 'Password minimal 8 karakter'),
+});

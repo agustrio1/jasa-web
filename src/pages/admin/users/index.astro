@@ -1,0 +1,35 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import DeleteButton from '@/components/admin/DeleteButton.tsx';
+import { getAllUsers } from '@/lib/services/user.service';
+
+const users = await getAllUsers();
+const currentUser = Astro.locals.user;
+---
+
+<AdminLayout title="Kelola Admin">
+  <section class="mx-auto max-w-2xl p-4 sm:p-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Kelola Admin</h1>
+      <a href="/admin/users/new" class="rounded-md bg-gray-900 px-4 py-2 text-sm text-white">
+        Tambah Admin
+      </a>
+    </div>
+
+    <div class="mt-6 divide-y divide-gray-200 rounded-md border border-gray-200">
+      {users.map((u) => (
+        <div class="flex items-center justify-between gap-3 p-3">
+          <div class="min-w-0">
+            <p class="truncate text-sm font-medium text-gray-900">
+              {u.name} {u.id === currentUser?.id && <span class="text-xs text-gray-400">(Anda)</span>}
+            </p>
+            <p class="truncate text-xs text-gray-500">{u.email}</p>
+          </div>
+          {u.id !== currentUser?.id && (
+            <DeleteButton client:load endpoint={`/api/admin/users/${u.id}`} confirmMessage={`Hapus admin "${u.name}"?`} />
+          )}
+        </div>
+      ))}
+    </div>
+  </section>
+</AdminLayout>

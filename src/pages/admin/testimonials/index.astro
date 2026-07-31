@@ -1,0 +1,43 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import Pagination from '@/components/admin/Pagination.tsx';
+import DeleteButton from '@/components/admin/DeleteButton.tsx';
+import { getTestimonialsPaginated } from '@/lib/services/testimonial.service';
+
+const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1', 10) || 1);
+const { items, totalPages, total } = await getTestimonialsPaginated(page);
+---
+
+<AdminLayout title="Testimoni">
+  <section class="p-4 sm:p-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-3">
+        <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Testimoni</h1>
+        <span class="text-sm text-gray-500">{total} total</span>
+      </div>
+      <a href="/admin/testimonials/new" class="w-full rounded-md bg-gray-900 px-4 py-2 text-center text-sm text-white sm:w-auto">
+        Tambah Testimoni
+      </a>
+    </div>
+
+    <div class="mt-6 divide-y divide-gray-200 rounded-md border border-gray-200">
+      {items.length === 0 && (
+        <p class="p-6 text-center text-sm text-gray-400">Belum ada testimoni</p>
+      )}
+      {items.map((t) => (
+        <div class="flex items-center justify-between gap-3 p-3">
+          <a href={`/admin/testimonials/${t.id}`} class="min-w-0 flex-1">
+            <p class="truncate font-medium text-gray-900">{t.name}</p>
+            <p class="truncate text-sm text-gray-500">
+              {t.isPublished ? <span class="text-green-600">Terbit</span> : <span class="text-gray-400">Draft</span>}
+              {t.isFeatured && ' · ⭐ Homepage'} · {t.rating} bintang
+            </p>
+          </a>
+          <DeleteButton client:load endpoint={`/api/admin/testimonials/${t.id}`} confirmMessage={`Hapus testimoni dari "${t.name}"?`} />
+        </div>
+      ))}
+    </div>
+
+    <Pagination client:load page={page} totalPages={totalPages} baseUrl="/admin/testimonials" />
+  </section>
+</AdminLayout>
