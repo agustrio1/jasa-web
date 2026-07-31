@@ -6,6 +6,7 @@ import { getPortfolioBySlug, getRelatedPortfolios } from '@/lib/services/portfol
 import { resolveSeo } from '@/lib/seo/resolve-seo';
 import { renderRichContent } from '@/lib/tiptap/render';
 import { creativeWorkJsonLd } from '@/lib/seo/json-ld';
+import { getTechIcon } from '@/lib/tech-icons';
 
 const { slug } = Astro.params;
 const portfolio = await getPortfolioBySlug(slug!);
@@ -37,9 +38,12 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
 
 <Layout title={seo.title} description={seo.description} ogImage={seo.ogImage} jsonLd={jsonLd}>
   {portfolio.coverImage && (
-    <div class="relative h-64 w-full overflow-hidden sm:h-96">
-      <img src={portfolio.coverImage} alt={portfolio.title} class="h-full w-full object-cover" />
-      <div class="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent"></div>
+    <div class="flex justify-center bg-ink py-8">
+      <img
+        src={portfolio.coverImage}
+        alt={portfolio.title}
+        class="max-h-96 w-auto max-w-full rounded-lg object-contain shadow-xl"
+      />
     </div>
   )}
 
@@ -64,9 +68,23 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
 
     {technologies.length > 0 && (
       <div class="mt-6 flex flex-wrap gap-2">
-        {technologies.map((tech) => (
-          <span class="rounded-full bg-charcoal/5 px-3 py-1 text-xs text-charcoal/70">{tech}</span>
-        ))}
+        {technologies.map((tech) => {
+          const iconPath = getTechIcon(tech);
+          return (
+            <span class="flex items-center gap-1.5 rounded-full bg-charcoal/5 px-3 py-1.5 text-xs text-charcoal/70">
+              {iconPath ? (
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d={iconPath} />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16M6 8l-4 4 4 4m12-8l4 4-4 4" />
+                </svg>
+              )}
+              {tech}
+            </span>
+          );
+        })}
       </div>
     )}
 
@@ -106,7 +124,9 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
           {related.map((p) => (
             <a href={`/portfolio/${p.slug}`} class="group overflow-hidden rounded-lg border border-charcoal/10 bg-white">
               {p.coverImage && (
-                <img src={p.coverImage} alt={p.title} class="aspect-video w-full object-cover" loading="lazy" />
+                <div class="flex h-40 items-center justify-center bg-ink/5 p-3">
+                  <img src={p.coverImage} alt={p.title} class="max-h-full max-w-full object-contain" loading="lazy" />
+                </div>
               )}
               <div class="p-4">
                 {p.category && <span class="font-mono text-xs uppercase tracking-wide text-brick">{p.category}</span>}
