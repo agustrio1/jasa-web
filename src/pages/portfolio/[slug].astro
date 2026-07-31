@@ -2,9 +2,10 @@
 export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
-import { getPortfolioBySlug } from '@/lib/services/portfolio.service';
+import { getPortfolioBySlug, getRelatedPortfolios } from '@/lib/services/portfolio.service';
 import { resolveSeo } from '@/lib/seo/resolve-seo';
 import { renderRichContent } from '@/lib/tiptap/render';
+import { creativeWorkJsonLd } from '@/lib/seo/json-ld';
 
 const { slug } = Astro.params;
 const portfolio = await getPortfolioBySlug(slug!);
@@ -21,24 +22,44 @@ const seo = await resolveSeo('portfolio', portfolio.id, {
 
 const contentHtml = renderRichContent(portfolio.content);
 const technologies = (portfolio.technologies as string[]) ?? [];
+const related = await getRelatedPortfolios(portfolio.id, portfolio.category, 3);
+
+const jsonLd = creativeWorkJsonLd({
+  title: portfolio.title,
+  description: seo.description,
+  url: Astro.url.href,
+  image: portfolio.coverImage ?? undefined,
+  dateModified: portfolio.updatedAt,
+});
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
-<Layout title={seo.title} description={seo.description} ogImage={seo.ogImage}>
-  <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+<Layout title={seo.title} description={seo.description} ogImage={seo.ogImage} jsonLd={jsonLd}>
+  {portfolio.coverImage && (
+    <div class="relative h-64 w-full overflow-hidden sm:h-96">
+      <img src={portfolio.coverImage} alt={portfolio.title} class="h-full w-full object-cover" />
+      <div class="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent"></div>
+    </div>
+  )}
+
+  <article class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
+    <nav class="flex flex-wrap items-center gap-1.5 text-xs text-charcoal/40">
+      <a href="/" class="hover:text-brick">Beranda</a>
+      <span>/</span>
+      <a href="/portfolio" class="hover:text-brick">Portofolio</a>
+      <span>/</span>
+      <span class="text-charcoal/60">{portfolio.title}</span>
+    </nav>
+
     {portfolio.category && (
-      <span class="font-mono text-xs uppercase tracking-widest text-brick">{portfolio.category}</span>
+      <span class="mt-6 inline-block font-mono text-xs uppercase tracking-widest text-brick">{portfolio.category}</span>
     )}
 
     <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">{portfolio.title}</h1>
 
     {portfolio.clientName && (
-      <p class="mt-3 text-sm text-charcoal/60">Klien: {portfolio.clientName}</p>
-    )}
-
-    {portfolio.coverImage && (
-      <img src={portfolio.coverImage} alt={portfolio.title} class="mt-8 w-full rounded-lg object-cover" />
+      <p class="mt-3 text-sm text-charcoal/60">Klien: <span class="font-medium text-charcoal">{portfolio.clientName}</span></p>
     )}
 
     {technologies.length > 0 && (
@@ -55,15 +76,46 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten tidak tersedia.</p>
     )}
 
-    {portfolio.projectUrl && (
+    <div class="mt-10 flex flex-col gap-3 sm:flex-row">
+      {portfolio.projectUrl && (
+        <a
+          href={portfolio.projectUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-block rounded-full bg-brass px-6 py-3 text-center text-sm font-medium text-ink hover:opacity-90"
+        >
+          Kunjungi Proyek →
+        </a>
+      )}
       <a
-        href={portfolio.projectUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="mt-8 inline-block rounded-full bg-brass px-6 py-3 text-sm font-medium text-ink hover:opacity-90"
+        href="/kontak"
+        class="inline-block rounded-full border border-charcoal/20 px-6 py-3 text-center text-sm font-medium text-charcoal hover:border-brick hover:text-brick"
       >
-        Kunjungi Proyek →
+        Diskusikan Proyek Serupa
       </a>
-    )}
+    </div>
   </article>
+
+  {related.length > 0 && (
+    <section class="border-t border-charcoal/10 bg-charcoal/5 py-16">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <p class="font-mono text-xs uppercase tracking-widest text-brick">Proyek Lainnya</p>
+        <h2 class="mt-2 font-display text-2xl font-semibold text-charcoal">Lihat karya kami yang lain</h2>
+
+        <div class="mt-8 grid gap-5 sm:grid-cols-3">
+          {related.map((p) => (
+            <a href={`/portfolio/${p.slug}`} class="group overflow-hidden rounded-lg border border-charcoal/10 bg-white">
+              {p.coverImage && (
+                <img src={p.coverImage} alt={p.title} class="aspect-video w-full object-cover" loading="lazy" />
+              )}
+              <div class="p-4">
+                {p.category && <span class="font-mono text-xs uppercase tracking-wide text-brick">{p.category}</span>}
+                <h3 class="mt-1 font-display text-base font-semibold text-charcoal group-hover:text-brick">{p.title}</h3>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
 </Layout>

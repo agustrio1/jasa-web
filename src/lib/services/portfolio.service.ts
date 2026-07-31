@@ -20,6 +20,23 @@ export async function getFeaturedPortfolios(limit: number = 3) {
   });
 }
 
+export async function getRelatedPortfolios(currentId: string, category: string | null, limit: number = 3) {
+  const all = await db.query.portfolios.findMany({
+    where: eq(portfolios.isPublished, true),
+    orderBy: (p, { desc }) => [desc(p.createdAt)],
+  });
+
+  const others = all.filter((p) => p.id !== currentId);
+
+  if (category) {
+    const sameCategory = others.filter((p) => p.category === category);
+    const rest = others.filter((p) => p.category !== category);
+    return [...sameCategory, ...rest].slice(0, limit);
+  }
+
+  return others.slice(0, limit);
+}
+
 export async function getPortfoliosPaginated(page: number) {
   const offset = (page - 1) * PER_PAGE;
 

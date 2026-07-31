@@ -71,3 +71,21 @@ export function faqJsonLd(faqs: FaqItem[]) {
     })),
   };
 }
+
+export function creativeWorkJsonLd(input: {
+  title: string;
+  description: string;
+  url: string;
+  image?: string;
+  dateModified: Date;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: input.title,
+    description: input.description,
+    url: input.url,
+    ...(input.image && { image: input.image }),
+    dateModified: input.dateModified.toISOString(),
+  };
+}
