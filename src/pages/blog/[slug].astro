@@ -24,7 +24,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
         {portfolios.map((p) => (
           <a href={`/portfolio/${p.slug}`} class="group block">
             {p.coverImage && (
-              <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl bg-charcoal/5">
+              <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl">
                 <img src={p.coverImage} alt={p.title} class="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
               </div>
             )}
