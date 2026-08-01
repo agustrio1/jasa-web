@@ -46,11 +46,11 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
 ---
 
 <Layout title="Blog" description="Artikel dan tips seputar website, bisnis online, dan digital marketing.">
-  <section class="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
     <p class="font-mono text-xs uppercase tracking-widest text-brick">Blog</p>
     <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Blog & Artikel</h1>
     <p class="mt-3 max-w-xl text-sm leading-relaxed text-charcoal/60 sm:text-base">
-      Tips, panduan, dan insight seputar pembuatan website, SEO, dan strategi bisnis online untuk membantu bisnis Anda bertumbuh.
+      Kumpulan tulisan seputar website, SEO, dan pemasaran digital yang kami rangkum biar bisnis Anda makin gampang berkembang online.
     </p>
 
     <form method="GET" class="mt-8 flex max-w-md gap-2">
@@ -77,18 +77,33 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
         {query ? `Tidak ada artikel yang cocok dengan "${query}".` : 'Belum ada artikel yang dipublikasikan.'}
       </p>
     ) : (
-      <div class="mt-10 divide-y divide-charcoal/10 border-t border-charcoal/10">
+      <div class="mt-10 grid gap-x-6 gap-y-10 sm:grid-cols-2">
         {items.map((post) => (
-          <a href={`/blog/${post.slug}`} class="group block py-6">
-            <h2 class="font-display text-lg font-semibold text-charcoal group-hover:text-brick sm:text-xl">
+          <a href={`/blog/${post.slug}`} class="group block">
+            {post.coverImage && (
+              <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl bg-charcoal/5">
+                <img src={post.coverImage} alt={post.title} class="max-h-full max-w-full object-contain" loading="lazy" />
+              </div>
+            )}
+
+            {post.category && (
+              <span class="mt-4 inline-block font-mono text-xs uppercase tracking-wide text-brick">{post.category.name}</span>
+            )}
+
+            <h2 class="mt-1 font-display text-xl font-semibold leading-snug text-charcoal group-hover:text-brick">
               {post.title}
             </h2>
+
             <p class="mt-2 text-sm leading-relaxed text-charcoal/60 line-clamp-2">{post.excerpt}</p>
-            <div class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs uppercase tracking-wide text-charcoal/40">
-              {post.category && (
+
+            <div class="mt-4 flex items-center gap-2 text-sm text-charcoal/50">
+              {post.author && (
                 <>
-                  <span class="text-brick">{post.category.name}</span>
-                  <span>•</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>{post.author}</span>
+                  <span class="text-charcoal/30">•</span>
                 </>
               )}
               <span>{formatDate(post.publishedAt)}</span>
