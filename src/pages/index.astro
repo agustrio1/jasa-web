@@ -21,7 +21,7 @@ const featuredCount = parseInt(settings.homepage_featured_count, 10) || 3;
 const featuredPortfolios = await getFeaturedPortfolios(featuredCount);
 const allPortfolios = await getPublishedPortfolios();
 const featuredTestimonials = await getFeaturedTestimonials(6);
-const showcaseImages = allPortfolios.filter((p) => p.coverImage).slice(0, 10);
+const showcaseImages = allPortfolios.filter((p) => p.coverImage).slice(0, 5);
 
 const featuredPackages = await getFeaturedPackages(6);
 
@@ -63,7 +63,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
   description={settings.site_default_meta_description || 'Jasa pembuatan website profesional, cepat, dan teroptimasi SEO untuk bisnis Anda.'}
   jsonLd={jsonLd}
 >
-  <!-- HERO SECTION: gaya scrolling gallery seperti jasawebsite.id -->
+  <!-- HERO SECTION: teks kiri, mosaic gambar statis kanan (ringan, tanpa animasi berat) -->
   <section class="relative overflow-hidden bg-gradient-to-br from-ink via-ink to-charcoal/90 py-20 text-bone sm:py-28">
     <div
       class="pointer-events-none absolute inset-0 opacity-[0.05]"
@@ -72,57 +72,78 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     <div class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-brass/10 blur-3xl"></div>
     <div class="pointer-events-none absolute -left-24 bottom-0 h-80 w-80 rounded-full bg-brick/10 blur-3xl"></div>
 
-    <div class="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
-      <div class="inline-flex items-center gap-2 rounded-full border border-brass/20 bg-brass/5 px-3 py-1">
-        <span class="flex h-2 w-2 rounded-full bg-brass animate-pulse"></span>
-        <p class="font-mono text-[10px] uppercase tracking-wider text-brass font-medium">Jasa Pembuatan Website Premium</p>
-      </div>
+    <div class="relative mx-auto max-w-6xl px-4 sm:px-6">
+      <div class="grid items-center gap-12 lg:grid-cols-12">
 
-      <h1 class="mt-6 font-display text-4xl font-extrabold leading-[1.15] text-white sm:text-5xl lg:text-6xl">
-        Bukan Sekadar Website,<br />
-        <span class="bg-gradient-to-r from-brass via-brass/90 to-bone bg-clip-text text-transparent">Tapi Mesin Pertumbuhan Bisnis.</span>
-      </h1>
+        <!-- Kolom kiri: teks -->
+        <div class="space-y-6 text-left lg:col-span-6">
+          <div class="inline-flex items-center gap-2 rounded-full border border-brass/20 bg-brass/5 px-3 py-1">
+            <span class="flex h-2 w-2 rounded-full bg-brass animate-pulse"></span>
+            <p class="font-mono text-[10px] uppercase tracking-wider text-brass font-medium">Jasa Pembuatan Website Premium</p>
+          </div>
 
-      <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-bone/80 sm:text-lg">
-        Kami membangun website premium berkecepatan tinggi yang dirancang khusus untuk membangun kredibilitas, mendominasi halaman pencarian Google SEO, serta mengonversi pengunjung kasual menjadi pembeli loyal bisnis Anda.
-      </p>
+          <h1 class="font-display text-4xl font-extrabold leading-[1.15] text-white sm:text-5xl">
+            Bukan Sekadar Website,<br />
+            <span class="bg-gradient-to-r from-brass via-brass/90 to-bone bg-clip-text text-transparent">Tapi Mesin Pertumbuhan Bisnis.</span>
+          </h1>
 
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-        <a href="#harga" class="inline-flex items-center justify-center rounded-xl bg-brass px-8 py-4 text-sm font-semibold text-ink shadow-lg shadow-brass/10 transition-transform hover:-translate-y-0.5 hover:opacity-95">
-          Lihat Paket Harga
-        </a>
-        {whatsappHref && (
-          <a href={whatsappHref} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-xl border border-bone/20 bg-white/5 px-8 py-4 text-sm font-semibold text-bone backdrop-blur-sm transition-all hover:border-brass hover:text-brass hover:bg-white/10">
-            <svg class="mr-2 h-4 w-4 fill-current" viewBox="0 0 24 24">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.457L0 24zm6.59-4.846c1.6.95 3.488 1.449 5.412 1.451 5.428 0 9.846-4.415 9.849-9.847a9.77 9.77 0 0 0-2.868-6.963 9.8 9.8 0 0 0-6.964-2.864c-5.43 0-9.85 4.415-9.852 9.849-.001 1.925.501 3.808 1.454 5.409l-.951 3.474 3.562-.934zm11.205-5.385c-.372-.188-2.202-1.086-2.543-1.21-.343-.124-.593-.188-.843.188-.25.374-.967 1.21-1.184 1.459-.219.248-.438.277-.81.09-3.623-1.814-5.024-3.097-6.233-5.174-.313-.537.313-.497.896-1.656.093-.19.047-.355-.023-.497-.072-.143-.593-1.428-.813-1.957-.214-.514-.448-.444-.619-.453-.16-.008-.343-.01-.527-.01-.184 0-.485.069-.739.347-.253.277-.967.944-.967 2.301 0 1.356.987 2.668 1.123 2.852.137.184 1.943 2.967 4.707 4.16.657.284 1.17.453 1.57.58.66.21 1.26.18 1.734.11.53-.08 1.63-.667 1.86-1.282.23-.615.23-1.142.16-1.252-.07-.11-.253-.188-.626-.376z"/>
-            </svg>
-            Konsultasi Gratis
-          </a>
+          <p class="max-w-xl text-base leading-relaxed text-bone/80 sm:text-lg">
+            Kami membangun website premium berkecepatan tinggi yang dirancang khusus untuk membangun kredibilitas, mendominasi halaman pencarian Google SEO, serta mengonversi pengunjung kasual menjadi pembeli loyal bisnis Anda.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-4 pt-2">
+            <a href="#harga" class="inline-flex items-center justify-center rounded-xl bg-brass px-8 py-4 text-sm font-semibold text-ink shadow-lg shadow-brass/10 transition-transform hover:-translate-y-0.5 hover:opacity-95">
+              Lihat Paket Harga
+            </a>
+            {whatsappHref && (
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center rounded-xl border border-bone/20 bg-white/5 px-8 py-4 text-sm font-semibold text-bone backdrop-blur-sm transition-all hover:border-brass hover:text-brass hover:bg-white/10">
+                <svg class="mr-2 h-4 w-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.457L0 24zm6.59-4.846c1.6.95 3.488 1.449 5.412 1.451 5.428 0 9.846-4.415 9.849-9.847a9.77 9.77 0 0 0-2.868-6.963 9.8 9.8 0 0 0-6.964-2.864c-5.43 0-9.85 4.415-9.852 9.849-.001 1.925.501 3.808 1.454 5.409l-.951 3.474 3.562-.934zm11.205-5.385c-.372-.188-2.202-1.086-2.543-1.21-.343-.124-.593-.188-.843.188-.25.374-.967 1.21-1.184 1.459-.219.248-.438.277-.81.09-3.623-1.814-5.024-3.097-6.233-5.174-.313-.537.313-.497.896-1.656.093-.19.047-.355-.023-.497-.072-.143-.593-1.428-.813-1.957-.214-.514-.448-.444-.619-.453-.16-.008-.343-.01-.527-.01-.184 0-.485.069-.739.347-.253.277-.967.944-.967 2.301 0 1.356.987 2.668 1.123 2.852.137.184 1.943 2.967 4.707 4.16.657.284 1.17.453 1.57.58.66.21 1.26.18 1.734.11.53-.08 1.63-.667 1.86-1.282.23-.615.23-1.142.16-1.252-.07-.11-.253-.188-.626-.376z"/>
+                </svg>
+                Konsultasi Gratis
+              </a>
+            )}
+          </div>
+
+          <div class="grid grid-cols-3 gap-4 pt-6 border-t border-bone/10 text-xs font-mono text-bone/60">
+            <div>✓ Mobile Responsive</div>
+            <div>✓ SEO Built-in</div>
+            <div>✓ Kecepatan Maksimal</div>
+          </div>
+        </div>
+
+        <!-- Kolom kanan: mosaic gambar statis, ringan (tanpa duplikasi/animasi) -->
+        {showcaseImages.length > 0 && (
+          <div class="relative hidden lg:col-span-6 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div class="flex flex-col gap-4 pt-8">
+              {showcaseImages[0] && (
+                <a href={`/portfolio/${showcaseImages[0].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
+                  <img src={showcaseImages[0].coverImage!} alt={showcaseImages[0].title} class="aspect-[4/3] w-full object-cover" loading="eager" width="400" height="300" />
+                </a>
+              )}
+              {showcaseImages[2] && (
+                <a href={`/portfolio/${showcaseImages[2].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
+                  <img src={showcaseImages[2].coverImage!} alt={showcaseImages[2].title} class="aspect-square w-full object-cover" loading="lazy" width="400" height="400" />
+                </a>
+              )}
+            </div>
+            <div class="flex flex-col gap-4">
+              {showcaseImages[1] && (
+                <a href={`/portfolio/${showcaseImages[1].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
+                  <img src={showcaseImages[1].coverImage!} alt={showcaseImages[1].title} class="aspect-square w-full object-cover" loading="lazy" width="400" height="400" />
+                </a>
+              )}
+              {showcaseImages[3] && (
+                <a href={`/portfolio/${showcaseImages[3].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
+                  <img src={showcaseImages[3].coverImage!} alt={showcaseImages[3].title} class="aspect-[4/3] w-full object-cover" loading="lazy" width="400" height="300" />
+                </a>
+              )}
+            </div>
+          </div>
         )}
+
       </div>
     </div>
-
-    <!-- Galeri marquee: dua baris scroll berlawanan arah, seperti jasawebsite.id -->
-    {showcaseImages.length > 0 && (
-      <div class="relative mt-16 space-y-4">
-        <div class="flex w-max animate-[scroll_45s_linear_infinite] gap-4 px-4">
-          {[...showcaseImages, ...showcaseImages].map((p) => (
-            <a href={`/portfolio/${p.slug}`} class="w-72 shrink-0 overflow-hidden rounded-xl border border-bone/10 shadow-xl shadow-black/30 sm:w-80">
-              <img src={p.coverImage!} alt={p.title} class="aspect-video w-full object-cover" loading="lazy" />
-            </a>
-          ))}
-        </div>
-        <div class="flex w-max animate-[scrollReverse_45s_linear_infinite] gap-4 px-4">
-          {[...showcaseImages.slice().reverse(), ...showcaseImages.slice().reverse()].map((p) => (
-            <a href={`/portfolio/${p.slug}`} class="w-72 shrink-0 overflow-hidden rounded-xl border border-bone/10 shadow-xl shadow-black/30 sm:w-80">
-              <img src={p.coverImage!} alt={p.title} class="aspect-video w-full object-cover" loading="lazy" />
-            </a>
-          ))}
-        </div>
-        <div class="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-ink to-transparent"></div>
-        <div class="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-ink to-transparent"></div>
-      </div>
-    )}
   </section>
 
   {services.length > 0 && (
@@ -336,15 +357,3 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     </div>
   </section>
 </Layout>
-
-<style>
-  @keyframes scroll {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
-  }
-
-  @keyframes scrollReverse {
-    from { transform: translateX(-50%); }
-    to { transform: translateX(0); }
-  }
-</style>
