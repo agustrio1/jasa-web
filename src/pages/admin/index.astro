@@ -4,47 +4,138 @@ import { db } from '@/lib/db';
 import { services } from '@/lib/db/schema/services';
 import { posts } from '@/lib/db/schema/blog';
 import { media } from '@/lib/db/schema/media';
+import { leads } from '@/lib/db/schema/leads';
+import { portfolios } from '@/lib/db/schema/portfolio';
+import { testimonials } from '@/lib/db/schema/testimonials';
 import { getVisitorsSummary } from '@/lib/analytics/analytics.service';
 
-const [allServices, allPosts, allMedia, visitors] = await Promise.all([
+const [allServices, allPosts, allMedia, allLeads, allPortfolios, allTestimonials, visitors] = await Promise.all([
   db.query.services.findMany(),
   db.query.posts.findMany(),
   db.query.media.findMany(),
+  db.query.leads.findMany({ orderBy: (l, { desc }) => [desc(l.createdAt)] }),
+  db.query.portfolios.findMany(),
+  db.query.testimonials.findMany(),
   getVisitorsSummary(7),
 ]);
 
 const publishedPosts = allPosts.filter((p) => p.isPublished).length;
+const unreadLeads = allLeads.filter((l) => !l.isRead).length;
 const todayVisitors = visitors?.at(-1)?.activeUsers ?? null;
+
+const now = new Date();
+const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+const leadsLast7Days = allLeads.filter((l) => new Date(l.createdAt) >= sevenDaysAgo);
+
+const leadsByDay: Record<string, number> = {};
+for (let i = 6; i >= 0; i--) {
+  const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+  const key = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+  leadsByDay[key] = 0;
+}
+leadsLast7Days.forEach((l) => {
+  const key = new Date(l.createdAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+  if (key in leadsByDay) leadsByDay[key]++;
+});
+
+const maxLeadsPerDay = Math.max(1, ...Object.values(leadsByDay));
+
+const recentLeads = allLeads.slice(0, 5);
 
 const stats = [
   { label: 'Layanan', value: allServices.length, href: '/admin/services' },
   { label: 'Post Terbit', value: `${publishedPosts}/${allPosts.length}`, href: '/admin/posts' },
+  { label: 'Portofolio', value: allPortfolios.length, href: '/admin/portfolio' },
+  { label: 'Testimoni', value: allTestimonials.length, href: '/admin/testimonials' },
   { label: 'Media', value: allMedia.length, href: '/admin/media' },
   { label: 'Pengunjung Hari Ini', value: todayVisitors ?? '—', href: '/admin/analytics' },
 ];
 ---
 
 <AdminLayout title="Dashboard">
-  <section class="p-6">
-    <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
+  <section class="p-4 sm:p-6">
+    <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">Dashboard</h1>
 
-    <div class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       {stats.map((stat) => (
         <a href={stat.href} class="rounded-lg border border-gray-200 p-4 hover:border-gray-400">
-          <p class="text-sm text-gray-500">{stat.label}</p>
-          <p class="mt-1 text-2xl font-semibold text-gray-900">{stat.value}</p>
+          <p class="text-xs text-gray-500">{stat.label}</p>
+          <p class="mt-1 text-xl font-semibold text-gray-900 sm:text-2xl">{stat.value}</p>
         </a>
       ))}
     </div>
 
+    <div class="mt-8 grid gap-6 lg:grid-cols-2">
+      <div class="rounded-lg border border-gray-200 p-4 sm:p-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-medium text-gray-700">Pesan Masuk (7 Hari Terakhir)</h2>
+          {unreadLeads > 0 && (
+            <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+              {unreadLeads} belum dibaca
+            </span>
+          )}
+        </div>
+
+        <div class="mt-6 flex h-40 items-end gap-2">
+          {Object.entries(leadsByDay).map(([day, count]) => (
+            <div class="flex flex-1 flex-col items-center gap-2">
+              <div class="flex h-32 w-full items-end">
+                <div
+                  class="w-full rounded-t bg-gray-900"
+                  style={`height: ${(count / maxLeadsPerDay) * 100}%; min-height: ${count > 0 ? '4px' : '0'}`}
+                  title={`${count} pesan`}
+                ></div>
+              </div>
+              <span class="text-xs text-gray-400">{day}</span>
+            </div>
+          ))}
+        </div>
+
+        <p class="mt-4 text-xs text-gray-500">Total {leadsLast7Days.length} pesan masuk minggu ini</p>
+      </div>
+
+      <div class="rounded-lg border border-gray-200 p-4 sm:p-6">
+        <h2 class="text-sm font-medium text-gray-700">Pesan Terbaru</h2>
+
+        <div class="mt-4 space-y-3">
+          {recentLeads.length === 0 && (
+            <p class="text-sm text-gray-400">Belum ada pesan masuk</p>
+          )}
+          {recentLeads.map((lead) => (
+            <a href="/admin/leads" class="flex items-start justify-between gap-2 rounded-md p-2 hover:bg-gray-50">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium text-gray-900">
+                  {lead.name} {!lead.isRead && <span class="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500"></span>}
+                </p>
+                <p class="truncate text-xs text-gray-500">{lead.service || lead.email}</p>
+              </div>
+              <span class="shrink-0 text-xs text-gray-400">
+                {new Date(lead.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+              </span>
+            </a>
+          ))}
+        </div>
+
+        <a href="/admin/leads" class="mt-4 block text-center text-sm font-medium text-blue-600 hover:underline">
+          Lihat semua pesan →
+        </a>
+      </div>
+    </div>
+
     <div class="mt-8">
       <h2 class="text-sm font-medium text-gray-700">Aksi Cepat</h2>
-      <div class="mt-3 flex gap-3">
+      <div class="mt-3 flex flex-wrap gap-3">
         <a href="/admin/services/new" class="rounded-md bg-gray-900 px-4 py-2 text-sm text-white">
           Tambah Layanan
         </a>
         <a href="/admin/posts/new" class="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700">
           Tulis Post
+        </a>
+        <a href="/admin/portfolio/new" class="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700">
+          Tambah Portofolio
+        </a>
+        <a href="/admin/testimonials/new" class="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700">
+          Tambah Testimoni
         </a>
       </div>
     </div>
