@@ -21,7 +21,9 @@ const featuredCount = parseInt(settings.homepage_featured_count, 10) || 3;
 const featuredPortfolios = await getFeaturedPortfolios(featuredCount);
 const allPortfolios = await getPublishedPortfolios();
 const featuredTestimonials = await getFeaturedTestimonials(6);
-const showcaseImages = allPortfolios.filter((p) => p.coverImage).slice(0, 5);
+const showcaseImages = allPortfolios.filter((p) => p.coverImage).slice(0, 6);
+const showcaseCol1 = showcaseImages.filter((_, i) => i % 2 === 0);
+const showcaseCol2 = showcaseImages.filter((_, i) => i % 2 === 1);
 
 const featuredPackages = await getFeaturedPackages(6);
 
@@ -63,7 +65,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
   description={settings.site_default_meta_description || 'Jasa pembuatan website profesional, cepat, dan teroptimasi SEO untuk bisnis Anda.'}
   jsonLd={jsonLd}
 >
-  <!-- HERO SECTION: teks kiri, mosaic gambar statis kanan (ringan, tanpa animasi berat) -->
+  <!-- HERO SECTION: teks kiri, marquee vertikal 2 kolom di kanan -->
   <section class="relative overflow-hidden bg-gradient-to-br from-ink via-ink to-charcoal/90 py-20 text-bone sm:py-28">
     <div
       class="pointer-events-none absolute inset-0 opacity-[0.05]"
@@ -84,7 +86,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
 
           <h1 class="font-display text-4xl font-extrabold leading-[1.15] text-white sm:text-5xl">
             Bukan Sekadar Website,<br />
-            <span class="bg-gradient-to-r from-brass via-brass/90 to-bone bg-clip-text text-transparent">Tapi Mesin Pertumbuhan Bisnis.</span>
+            <span class="text-brass">Tapi Mesin Pertumbuhan Bisnis.</span>
           </h1>
 
           <p class="max-w-xl text-base leading-relaxed text-bone/80 sm:text-lg">
@@ -104,41 +106,27 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
               </a>
             )}
           </div>
-
-          <div class="grid grid-cols-3 gap-4 pt-6 border-t border-bone/10 text-xs font-mono text-bone/60">
-            <div>✓ Mobile Responsive</div>
-            <div>✓ SEO Built-in</div>
-            <div>✓ Kecepatan Maksimal</div>
-          </div>
         </div>
 
-        <!-- Kolom kanan: mosaic gambar statis, ringan (tanpa duplikasi/animasi) -->
+        <!-- Kolom kanan: marquee vertikal 2 kolom, gambar utuh tidak kepotong -->
         {showcaseImages.length > 0 && (
-          <div class="relative hidden lg:col-span-6 lg:grid lg:grid-cols-2 lg:gap-4">
-            <div class="flex flex-col gap-4 pt-8">
-              {showcaseImages[0] && (
-                <a href={`/portfolio/${showcaseImages[0].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
-                  <img src={showcaseImages[0].coverImage!} alt={showcaseImages[0].title} class="aspect-[4/3] w-full object-cover" loading="eager" width="400" height="300" />
+          <div class="relative hidden h-[520px] overflow-hidden lg:col-span-6 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div class="flex flex-col gap-4 animate-[marqueeUp_28s_linear_infinite]">
+              {[...showcaseCol1, ...showcaseCol1].map((p) => (
+                <a href={`/portfolio/${p.slug}`} class="block overflow-hidden rounded-xl border border-bone/10 bg-charcoal shadow-lg shadow-black/30">
+                  <img src={p.coverImage!} alt={p.title} class="w-full object-contain" loading="lazy" />
                 </a>
-              )}
-              {showcaseImages[2] && (
-                <a href={`/portfolio/${showcaseImages[2].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
-                  <img src={showcaseImages[2].coverImage!} alt={showcaseImages[2].title} class="aspect-square w-full object-cover" loading="lazy" width="400" height="400" />
-                </a>
-              )}
+              ))}
             </div>
-            <div class="flex flex-col gap-4">
-              {showcaseImages[1] && (
-                <a href={`/portfolio/${showcaseImages[1].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
-                  <img src={showcaseImages[1].coverImage!} alt={showcaseImages[1].title} class="aspect-square w-full object-cover" loading="lazy" width="400" height="400" />
+            <div class="flex flex-col gap-4 animate-[marqueeDown_28s_linear_infinite] pt-16">
+              {[...showcaseCol2, ...showcaseCol2].map((p) => (
+                <a href={`/portfolio/${p.slug}`} class="block overflow-hidden rounded-xl border border-bone/10 bg-charcoal shadow-lg shadow-black/30">
+                  <img src={p.coverImage!} alt={p.title} class="w-full object-contain" loading="lazy" />
                 </a>
-              )}
-              {showcaseImages[3] && (
-                <a href={`/portfolio/${showcaseImages[3].slug}`} class="overflow-hidden rounded-xl border border-bone/10 shadow-lg shadow-black/30">
-                  <img src={showcaseImages[3].coverImage!} alt={showcaseImages[3].title} class="aspect-[4/3] w-full object-cover" loading="lazy" width="400" height="300" />
-                </a>
-              )}
+              ))}
             </div>
+            <div class="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-ink to-transparent"></div>
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink to-transparent"></div>
           </div>
         )}
 
@@ -357,3 +345,14 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     </div>
   </section>
 </Layout>
+
+<style>
+  @keyframes marqueeUp {
+    from { transform: translateY(0); }
+    to { transform: translateY(-50%); }
+  }
+  @keyframes marqueeDown {
+    from { transform: translateY(-50%); }
+    to { transform: translateY(0); }
+  }
+</style>
