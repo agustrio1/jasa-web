@@ -79,9 +79,9 @@ const currentPath = Astro.url.pathname;
 
   <nav
     id="mobile-menu"
-    class="grid grid-rows-[0fr] overflow-hidden border-t border-transparent bg-ink/95 backdrop-blur-md transition-all duration-300 ease-in-out md:hidden"
+    class="max-h-0 overflow-hidden bg-ink/95 backdrop-blur-md transition-all duration-300 ease-in-out md:hidden"
   >
-    <div class="flex min-h-0 flex-col gap-1 px-4 py-3">
+    <div class="flex flex-col gap-1 px-4 py-3">
       {NAV_LINKS.map((link) => {
         const isActive = currentPath === link.href;
         return (
@@ -116,9 +116,10 @@ const currentPath = Astro.url.pathname;
   const iconClose = document.getElementById('icon-close');
 
   btn?.addEventListener('click', () => {
-    const isOpen = menu?.classList.contains('grid-rows-[1fr]');
-    menu?.classList.toggle('grid-rows-[0fr]', isOpen);
-    menu?.classList.toggle('grid-rows-[1fr]', !isOpen);
+    const isOpen = menu?.classList.contains('max-h-96');
+
+    menu?.classList.toggle('max-h-0', isOpen);
+    menu?.classList.toggle('max-h-96', !isOpen);
     menu?.classList.toggle('border-t', !isOpen);
     menu?.classList.toggle('border-bone/10', !isOpen);
     iconOpen?.classList.toggle('hidden', !isOpen);
