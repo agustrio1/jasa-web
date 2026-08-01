@@ -2,46 +2,142 @@
 export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
-import { getPublishedPortfolios } from '@/lib/services/portfolio.service';
+import { getPostBySlug } from '@/lib/services/post.service';
+import { resolveSeo } from '@/lib/seo/resolve-seo';
+import { renderRichContent } from '@/lib/tiptap/render';
+import { blogPostingJsonLd, faqJsonLd } from '@/lib/seo/json-ld';
 
-const portfolios = await getPublishedPortfolios();
+const { slug } = Astro.params;
+const post = await getPostBySlug(slug!);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const seo = await resolveSeo('post', post.id, {
+  title: post.title,
+  description: post.excerpt ?? '',
+  ogImage: post.coverImage ?? undefined,
+});
+
+const contentHtml = renderRichContent(post.content);
+
+function formatDate(date: Date | string | null | undefined) {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+const jsonLdBlocks: Record<string, unknown>[] = [
+  blogPostingJsonLd({
+    title: post.title,
+    description: post.excerpt ?? '',
+    url: Astro.url.href,
+    image: post.coverImage ?? undefined,
+    datePublished: post.publishedAt ?? post.createdAt,
+    dateModified: post.updatedAt,
+    authorName: 'Admin',
+  }),
+];
+
+if (post.faq && Array.isArray(post.faq) && post.faq.length > 0) {
+  jsonLdBlocks.push(faqJsonLd(post.faq as { question: string; answer: string }[]));
+}
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
-<Layout title="Portofolio Kami" description="Kumpulan proyek website yang telah kami kerjakan untuk berbagai klien.">
-  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-    <p class="font-mono text-xs uppercase tracking-widest text-brick">Portofolio</p>
-    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Proyek yang telah kami kerjakan</h1>
-    <p class="mt-3 max-w-xl text-sm leading-relaxed text-charcoal/60 sm:text-base">
-      Beberapa website yang sudah kami bangun untuk klien dari berbagai jenis bisnis, mulai dari company profile sampai sistem custom.
-    </p>
+<Layout title={seo.title} description={seo.description} ogImage={seo.ogImage} jsonLd={jsonLdBlocks}>
+  <article class="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-20">
+    <a href="/blog" class="inline-flex items-center gap-1.5 text-sm font-medium text-charcoal/50 hover:text-brick">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Kembali ke Blog
+    </a>
 
-    {portfolios.length === 0 ? (
-      <p class="mt-10 text-sm text-charcoal/50">Belum ada proyek yang ditampilkan.</p>
+    {post.category && (
+      <a
+        href={`/blog/kategori/${post.category.slug}`}
+        class="mt-6 inline-block rounded-full bg-brick/10 px-3 py-1 font-mono text-xs uppercase tracking-wide text-brick hover:bg-brick/20"
+      >
+        {post.category.name}
+      </a>
+    )}
+
+    <h1 class="mt-4 font-display text-3xl font-semibold leading-tight text-charcoal sm:text-4xl">
+      {post.title}
+    </h1>
+
+    <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-charcoal/50">
+      {post.author && (
+        <span class="flex items-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          {post.author}
+        </span>
+      )}
+      {post.author && (post.publishedAt || post.createdAt) && <span class="text-charcoal/25">•</span>}
+      {(post.publishedAt || post.createdAt) && (
+        <span>{formatDate(post.publishedAt ?? post.createdAt)}</span>
+      )}
+    </div>
+
+    {post.coverImage && (
+      <div class="mt-8 overflow-hidden rounded-xl bg-charcoal/5">
+        <img src={post.coverImage} alt={post.title} class="w-full" loading="eager" />
+      </div>
+    )}
+
+    {contentHtml ? (
+      <div class="prose prose-sm mt-10 max-w-none prose-headings:font-display prose-headings:text-charcoal prose-a:text-brick prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-img:border prose-img:border-charcoal/10" set:html={contentHtml} />
     ) : (
-      <div class="mt-10 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-        {portfolios.map((p) => (
-          <a href={`/portfolio/${p.slug}`} class="group block">
-            {p.coverImage && (
-              <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl">
-                <img src={p.coverImage} alt={p.title} class="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
-              </div>
-            )}
-            <div class="mt-4">
-              {p.category && (
-                <span class="inline-block rounded-full bg-brick/10 px-3 py-1 font-mono text-xs uppercase tracking-wide text-brick">
-                  {p.category}
-                </span>
-              )}
-              <h2 class="mt-2 font-display text-lg font-semibold leading-snug text-charcoal group-hover:text-brick">
-                {p.title}
-              </h2>
-              {p.clientName && <p class="mt-1 text-sm text-charcoal/50">{p.clientName}</p>}
-            </div>
+      <p class="mt-10 text-sm italic text-charcoal/40">Konten belum tersedia.</p>
+    )}
+
+    {post.postTags && post.postTags.length > 0 && (
+      <div class="mt-10 flex flex-wrap gap-2 border-t border-charcoal/10 pt-6">
+        {post.postTags.map((pt: any) => (
+          <a
+            href={`/blog/tag/${pt.tag.slug}`}
+            class="rounded-full border border-charcoal/15 px-3 py-1 text-xs text-charcoal/60 hover:border-brick/40 hover:text-brick"
+          >
+            #{pt.tag.name}
           </a>
         ))}
       </div>
     )}
-  </section>
+
+    {post.faq && Array.isArray(post.faq) && post.faq.length > 0 && (
+      <div class="mt-10 border-t border-charcoal/10 pt-8">
+        <p class="font-mono text-xs uppercase tracking-widest text-brick">FAQ</p>
+        <h2 class="mt-2 font-display text-xl font-semibold text-charcoal">Pertanyaan Umum</h2>
+        <div class="mt-4 space-y-3">
+          {(post.faq as { question: string; answer: string }[]).map((faq) => (
+            <details class="group rounded-lg border border-charcoal/10 bg-white/40 p-4 transition-colors open:border-brick/30">
+              <summary class="cursor-pointer list-none font-medium text-charcoal marker:content-none">
+                <span class="flex items-center justify-between gap-4">
+                  {faq.question}
+                  <span class="shrink-0 text-brick transition-transform group-open:rotate-45">+</span>
+                </span>
+              </summary>
+              <p class="mt-2 text-sm leading-relaxed text-charcoal/60">{faq.answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <div class="mt-12 rounded-lg border border-charcoal/10 bg-charcoal/5 p-6 text-center">
+      <p class="font-display text-lg font-semibold text-charcoal">Butuh website untuk bisnis Anda?</p>
+      <p class="mt-1 text-sm text-charcoal/60">Konsultasi gratis, tanpa komitmen.</p>
+      <a href="/blog" class="mt-4 inline-block rounded-full bg-brick px-6 py-2.5 text-sm font-medium text-bone hover:opacity-90">
+        Lihat Artikel Lainnya
+      </a>
+    </div>
+  </article>
 </Layout>

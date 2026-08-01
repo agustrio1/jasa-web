@@ -2,141 +2,46 @@
 export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
-import { getPortfolioBySlug, getRelatedPortfolios } from '@/lib/services/portfolio.service';
-import { resolveSeo } from '@/lib/seo/resolve-seo';
-import { renderRichContent } from '@/lib/tiptap/render';
-import { creativeWorkJsonLd } from '@/lib/seo/json-ld';
-import { getTechIcon } from '@/lib/tech-icons';
+import { getPublishedPortfolios } from '@/lib/services/portfolio.service';
 
-const { slug } = Astro.params;
-const portfolio = await getPortfolioBySlug(slug!);
-
-if (!portfolio) {
-  Astro.response.headers.set('Cache-Control', 'no-store');
-  return Astro.redirect('/404');
-}
-
-const seo = await resolveSeo('portfolio', portfolio.id, {
-  title: portfolio.title,
-  description: portfolio.clientName ? `Proyek untuk ${portfolio.clientName}` : portfolio.title,
-  ogImage: portfolio.coverImage ?? undefined,
-});
-
-const contentHtml = renderRichContent(portfolio.content);
-const technologies = (portfolio.technologies as string[]) ?? [];
-const related = await getRelatedPortfolios(portfolio.id, portfolio.category, 3);
-
-const jsonLd = creativeWorkJsonLd({
-  title: portfolio.title,
-  description: seo.description,
-  url: Astro.url.href,
-  image: portfolio.coverImage ?? undefined,
-  dateModified: portfolio.updatedAt,
-});
+const portfolios = await getPublishedPortfolios();
 
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
-<Layout title={seo.title} description={seo.description} ogImage={seo.ogImage} jsonLd={jsonLd}>
-  {portfolio.coverImage && (
-    <div class="flex justify-center bg-ink py-8">
-      <img
-        src={portfolio.coverImage}
-        alt={portfolio.title}
-        class="max-h-96 w-auto max-w-full rounded-lg object-contain shadow-xl"
-      />
-    </div>
-  )}
+<Layout title="Portofolio Kami" description="Kumpulan proyek website yang telah kami kerjakan untuk berbagai klien.">
+  <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+    <p class="font-mono text-xs uppercase tracking-widest text-brick">Portofolio</p>
+    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Proyek yang telah kami kerjakan</h1>
+    <p class="mt-3 max-w-xl text-sm leading-relaxed text-charcoal/60 sm:text-base">
+      Beberapa website yang sudah kami bangun untuk klien dari berbagai jenis bisnis, mulai dari company profile sampai sistem custom.
+    </p>
 
-  <article class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
-    <nav class="flex flex-wrap items-center gap-1.5 text-xs text-charcoal/40">
-      <a href="/" class="hover:text-brick">Beranda</a>
-      <span>/</span>
-      <a href="/portfolio" class="hover:text-brick">Portofolio</a>
-      <span>/</span>
-      <span class="text-charcoal/60">{portfolio.title}</span>
-    </nav>
-
-    {portfolio.category && (
-      <span class="mt-6 inline-block font-mono text-xs uppercase tracking-widest text-brick">{portfolio.category}</span>
-    )}
-
-    <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">{portfolio.title}</h1>
-
-    {portfolio.clientName && (
-      <p class="mt-3 text-sm text-charcoal/60">Klien: <span class="font-medium text-charcoal">{portfolio.clientName}</span></p>
-    )}
-
-    {technologies.length > 0 && (
-      <div class="mt-6 flex flex-wrap gap-2">
-        {technologies.map((tech) => {
-          const iconPath = getTechIcon(tech);
-          return (
-            <span class="flex items-center gap-1.5 rounded-full bg-charcoal/5 px-3 py-1.5 text-xs text-charcoal/70">
-              {iconPath ? (
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d={iconPath} />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16M6 8l-4 4 4 4m12-8l4 4-4 4" />
-                </svg>
-              )}
-              {tech}
-            </span>
-          );
-        })}
-      </div>
-    )}
-
-    {contentHtml ? (
-      <div class="prose prose-sm mt-8 max-w-none" set:html={contentHtml} />
+    {portfolios.length === 0 ? (
+      <p class="mt-10 text-sm text-charcoal/50">Belum ada proyek yang ditampilkan.</p>
     ) : (
-      <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten tidak tersedia.</p>
-    )}
-
-    <div class="mt-10 flex flex-col gap-3 sm:flex-row">
-      {portfolio.projectUrl && (
-        <a
-          href={portfolio.projectUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-block rounded-full bg-brass px-6 py-3 text-center text-sm font-medium text-ink hover:opacity-90"
-        >
-          Kunjungi Proyek →
-        </a>
-      )}
-      <a
-        href="/kontak"
-        class="inline-block rounded-full border border-charcoal/20 px-6 py-3 text-center text-sm font-medium text-charcoal hover:border-brick hover:text-brick"
-      >
-        Diskusikan Proyek Serupa
-      </a>
-    </div>
-  </article>
-
-  {related.length > 0 && (
-    <section class="border-t border-charcoal/10 bg-charcoal/5 py-16">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6">
-        <p class="font-mono text-xs uppercase tracking-widest text-brick">Proyek Lainnya</p>
-        <h2 class="mt-2 font-display text-2xl font-semibold text-charcoal">Lihat karya kami yang lain</h2>
-
-        <div class="mt-8 grid gap-5 sm:grid-cols-3">
-          {related.map((p) => (
-            <a href={`/portfolio/${p.slug}`} class="group overflow-hidden rounded-lg border border-charcoal/10 bg-white">
-              {p.coverImage && (
-                <div class="flex h-40 items-center justify-center bg-ink/5 p-3">
-                  <img src={p.coverImage} alt={p.title} class="max-h-full max-w-full object-contain" loading="lazy" />
-                </div>
-              )}
-              <div class="p-4">
-                {p.category && <span class="font-mono text-xs uppercase tracking-wide text-brick">{p.category}</span>}
-                <h3 class="mt-1 font-display text-base font-semibold text-charcoal group-hover:text-brick">{p.title}</h3>
+      <div class="mt-10 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        {portfolios.map((p) => (
+          <a href={`/portfolio/${p.slug}`} class="group block">
+            {p.coverImage && (
+              <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl">
+                <img src={p.coverImage} alt={p.title} class="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
               </div>
-            </a>
-          ))}
-        </div>
+            )}
+            <div class="mt-4">
+              {p.category && (
+                <span class="inline-block rounded-full bg-brick/10 px-3 py-1 font-mono text-xs uppercase tracking-wide text-brick">
+                  {p.category}
+                </span>
+              )}
+              <h2 class="mt-2 font-display text-lg font-semibold leading-snug text-charcoal group-hover:text-brick">
+                {p.title}
+              </h2>
+              {p.clientName && <p class="mt-1 text-sm text-charcoal/50">{p.clientName}</p>}
+            </div>
+          </a>
+        ))}
       </div>
-    </section>
-  )}
+    )}
+  </section>
 </Layout>
