@@ -346,7 +346,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
   </section>
 </Layout>
 
-<style>
+<style is:global>
   @keyframes marqueeUp {
     from { transform: translateY(0); }
     to { transform: translateY(-50%); }
