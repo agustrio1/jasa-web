@@ -21,7 +21,7 @@ const featuredCount = parseInt(settings.homepage_featured_count, 10) || 3;
 const featuredPortfolios = await getFeaturedPortfolios(featuredCount);
 const allPortfolios = await getPublishedPortfolios();
 const featuredTestimonials = await getFeaturedTestimonials(6);
-const showcaseImages = allPortfolios.filter((p) => p.coverImage).slice(0, 5);
+const showcaseImages = allPortfolios.filter((p) => p.coverImage).slice(0, 8);
 
 const featuredPackages = await getFeaturedPackages(6);
 
@@ -63,7 +63,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
   description={settings.site_default_meta_description || 'Jasa pembuatan website profesional, cepat, dan teroptimasi SEO untuk bisnis Anda.'}
   jsonLd={jsonLd}
 >
-  <!-- HERO SECTION: background terang, teks tengah, mosaic gambar miring di bawah -->
+  <!-- HERO SECTION: background terang, teks tengah, marquee horizontal gambar di bawah -->
   <section class="relative overflow-hidden bg-bone py-16 sm:py-24">
     <div class="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
       <div class="inline-flex items-center gap-2 rounded-full border border-brick/20 bg-brick/5 px-3 py-1">
@@ -91,45 +91,18 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       </div>
     </div>
 
-    <!-- Mosaic gambar portofolio, miring, statis (ringan, tanpa animasi) -->
+    <!-- Marquee horizontal gambar portofolio, scroll infinite ke kiri -->
     {showcaseImages.length > 0 && (
-      <div class="relative mx-auto mt-16 hidden h-[420px] max-w-5xl px-4 sm:mt-20 sm:block">
-        {showcaseImages[0] && (
-          <a href={`/portfolio/${showcaseImages[0].slug}`} class="absolute left-[4%] top-0 w-[30%] -rotate-3 overflow-hidden rounded-xl border border-charcoal/10 bg-white shadow-xl transition-transform hover:rotate-0 hover:z-10">
-            <img src={showcaseImages[0].coverImage!} alt={showcaseImages[0].title} class="aspect-[4/3] w-full object-cover" loading="eager" />
-          </a>
-        )}
-        {showcaseImages[1] && (
-          <a href={`/portfolio/${showcaseImages[1].slug}`} class="absolute right-[4%] top-0 w-[30%] rotate-2 overflow-hidden rounded-xl border border-charcoal/10 bg-white shadow-xl transition-transform hover:rotate-0 hover:z-10">
-            <img src={showcaseImages[1].coverImage!} alt={showcaseImages[1].title} class="aspect-[4/3] w-full object-cover" loading="lazy" />
-          </a>
-        )}
-        {showcaseImages[2] && (
-          <a href={`/portfolio/${showcaseImages[2].slug}`} class="absolute left-[24%] top-[38%] w-[26%] rotate-3 overflow-hidden rounded-xl border border-charcoal/10 bg-white shadow-xl transition-transform hover:rotate-0 hover:z-10">
-            <img src={showcaseImages[2].coverImage!} alt={showcaseImages[2].title} class="aspect-[4/3] w-full object-cover" loading="lazy" />
-          </a>
-        )}
-        {showcaseImages[3] && (
-          <a href={`/portfolio/${showcaseImages[3].slug}`} class="absolute right-[22%] top-[36%] w-[26%] -rotate-2 overflow-hidden rounded-xl border border-charcoal/10 bg-white shadow-xl transition-transform hover:rotate-0 hover:z-10">
-            <img src={showcaseImages[3].coverImage!} alt={showcaseImages[3].title} class="aspect-[4/3] w-full object-cover" loading="lazy" />
-          </a>
-        )}
-        {showcaseImages[4] && (
-          <a href={`/portfolio/${showcaseImages[4].slug}`} class="absolute left-1/2 top-[62%] w-[26%] -translate-x-1/2 rotate-1 overflow-hidden rounded-xl border border-charcoal/10 bg-white shadow-xl transition-transform hover:rotate-0 hover:z-10">
-            <img src={showcaseImages[4].coverImage!} alt={showcaseImages[4].title} class="aspect-[4/3] w-full object-cover" loading="lazy" />
-          </a>
-        )}
-      </div>
-    )}
-
-    <!-- Versi mobile: grid biasa, tanpa rotasi (biar gak ribet & tetap ringan di layar kecil) -->
-    {showcaseImages.length > 0 && (
-      <div class="mx-auto mt-10 grid max-w-md grid-cols-2 gap-3 px-4 sm:hidden">
-        {showcaseImages.slice(0, 4).map((p) => (
-          <a href={`/portfolio/${p.slug}`} class="overflow-hidden rounded-lg border border-charcoal/10 bg-white shadow-md">
-            <img src={p.coverImage!} alt={p.title} class="aspect-[4/3] w-full object-cover" loading="lazy" />
-          </a>
-        ))}
+      <div class="relative mt-14 overflow-hidden sm:mt-20">
+        <div class="flex w-max gap-4 animate-[marqueeLeft_35s_linear_infinite] px-4">
+          {[...showcaseImages, ...showcaseImages].map((p) => (
+            <a href={`/portfolio/${p.slug}`} class="w-56 shrink-0 overflow-hidden rounded-xl border border-charcoal/10 bg-white shadow-lg sm:w-72">
+              <img src={p.coverImage!} alt={p.title} class="aspect-video w-full object-cover" loading="lazy" />
+            </a>
+          ))}
+        </div>
+        <div class="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-bone to-transparent sm:w-32"></div>
+        <div class="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-bone to-transparent sm:w-32"></div>
       </div>
     )}
   </section>
@@ -355,3 +328,10 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     </div>
   </section>
 </Layout>
+
+<style is:global>
+  @keyframes marqueeLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+</style>
