@@ -38,10 +38,15 @@ const seo = await resolveSeo(location ? 'service_location' : 'service', location
 const finalDescription = seo.description || baseDescription;
 
 const contentHtml = renderRichContent(location?.contentOverride ?? service.content);
-const packages = (service.packages ?? []).map((pkg: any) => ({
-  ...pkg,
-  featuresHtml: renderRichContent(pkg.features),
-}));
+
+// Pricelist HANYA ditampilkan untuk halaman layanan kota (location terisi)
+const packages = location
+  ? (service.packages ?? []).map((pkg: any) => ({
+      ...pkg,
+      featuresHtml: renderRichContent(pkg.features),
+    }))
+  : [];
+
 const faqItems = (service.faq as { question: string; answer: string }[]) ?? [];
 
 const jsonLdBlocks: Record<string, unknown>[] = [
@@ -63,6 +68,12 @@ function packageWhatsappHref(packageName: string) {
   if (!settings.social_whatsapp) return '/kontak';
   const serviceTitle = location ? `${service?.name} di ${location.city}` : service?.name;
   const message = `Halo ${siteName}, saya tertarik dengan paket ${packageName} untuk layanan ${serviceTitle}. Bisa dijelaskan lebih lanjut?`;
+  return `https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+}
+
+function generalWhatsappHref() {
+  if (!settings.social_whatsapp) return '/kontak';
+  const message = `Halo ${siteName}, saya tertarik dengan layanan ${service?.name}. Bisa dijelaskan lebih lanjut soal detail dan harganya?`;
   return `https://wa.me/${settings.social_whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
 }
 
@@ -88,16 +99,27 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     ) : (
       <p class="mt-8 text-sm text-charcoal/40 italic">Detail konten tidak tersedia.</p>
     )}
+
+    {/* Halaman layanan umum (bukan kota) tidak tampilkan harga — arahkan ke WhatsApp langsung */}
+    {!location && (
+      <a
+        href={generalWhatsappHref()}
+        target={settings.social_whatsapp ? "_blank" : "_self"}
+        rel={settings.social_whatsapp ? "noopener noreferrer" : ""}
+        class="mt-8 inline-block rounded-full bg-brick px-6 py-3 text-center text-sm font-medium text-bone hover:opacity-90"
+      >
+        Tanya Detail & Harga
+      </a>
+    )}
   </section>
 
-  {/* SECTION 2: Pilihan Paket (Lebar/max-w-6xl agar di laptop muat 3 kolom sejajar) */}
-  {packages.length > 0 && (
+  {/* SECTION 2: Pilihan Paket — HANYA muncul untuk halaman layanan kota */}
+  {location && packages.length > 0 && (
     <section class="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-      {/* PERUBAHAN DI SINI: Judul section dibuat text-center */}
-      <div class="mx-auto max-w-3xl mb-10 text-center">
+      <div class="mx-auto mb-10 max-w-3xl text-center">
         <h2 class="font-display text-2xl font-semibold text-charcoal">Pilihan Paket</h2>
       </div>
-      
+
       <div class="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {packages.map((pkg: any) => (
           <div class={`flex h-full flex-col rounded-lg border p-6 ${pkg.isPopular ? 'border-brass bg-ink text-bone' : 'border-charcoal/10 bg-white'}`}>

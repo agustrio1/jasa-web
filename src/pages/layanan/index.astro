@@ -3,8 +3,6 @@ export const prerender = false;
 
 import Layout from '@/layouts/Layout.astro';
 import { getAllServices } from '@/lib/services/service.service';
-import { renderRichContent } from '@/lib/tiptap/render';
-import { db } from '@/lib/db';
 
 const query = Astro.url.searchParams.get('q')?.trim().toLowerCase() ?? '';
 
@@ -17,22 +15,6 @@ const services = query
     )
   : allServices;
 
-const servicesWithPackages = await Promise.all(
-  services.map(async (s) => {
-    const full = await db.query.services.findFirst({
-      where: (svc, { eq }) => eq(svc.id, s.id),
-      with: { packages: { orderBy: (p, { asc }) => [asc(p.sortOrder)] } },
-    });
-    const startingPackage = full?.packages?.[0] ?? null;
-    return {
-      ...s,
-      startingPackage: startingPackage
-        ? { ...startingPackage, featuresHtml: renderRichContent(startingPackage.features) }
-        : null,
-    };
-  })
-);
-
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 
@@ -41,7 +23,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
     <div class="mx-auto max-w-2xl text-center">
       <p class="font-mono text-xs uppercase tracking-widest text-brick">Layanan & Paket</p>
       <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">Yang bisa kami bangun untuk Anda</h1>
-      <p class="mt-3 text-charcoal/60">Pilih layanan sesuai kebutuhan bisnis, lengkap dengan paket harga transparan.</p>
+      <p class="mt-3 text-charcoal/60">Pilih layanan sesuai kebutuhan bisnis Anda, konsultasikan detail dan harga langsung dengan tim kami.</p>
     </div>
 
     <form method="GET" class="mx-auto mt-8 flex max-w-md gap-2">
@@ -63,37 +45,16 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       </p>
     )}
 
-    {servicesWithPackages.length === 0 ? (
+    {services.length === 0 ? (
       <p class="mt-10 text-center text-sm text-charcoal/50">
         {query ? `Tidak ada layanan yang cocok dengan "${query}".` : 'Belum ada layanan yang ditampilkan.'}
       </p>
     ) : (
       <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {servicesWithPackages.map((s) => (
+        {services.map((s) => (
           <div class="flex flex-col rounded-lg border border-charcoal/10 bg-white p-6">
             <h2 class="font-display text-lg font-semibold text-charcoal">{s.name}</h2>
-            <p class="mt-2 text-sm leading-relaxed text-charcoal/60">{s.shortDescription}</p>
-
-            <div class="mt-5">
-              {s.startingPackage ? (
-                <>
-                  <p class="text-xs text-charcoal/40">Mulai dari</p>
-                  <p class="mt-1 text-2xl font-semibold text-brick">
-                    {s.startingPackage.price}
-                    {s.startingPackage.priceNote && <span class="ml-1 text-sm font-normal text-charcoal/50">{s.startingPackage.priceNote}</span>}
-                  </p>
-                </>
-              ) : (
-                <p class="text-sm text-charcoal/50 italic">Hubungi kami untuk info harga</p>
-              )}
-            </div>
-
-            {s.startingPackage?.featuresHtml && (
-              <div
-                class="prose prose-sm mt-4 max-w-none flex-1 text-charcoal/70 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5"
-                set:html={s.startingPackage.featuresHtml}
-              />
-            )}
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-charcoal/60">{s.shortDescription}</p>
 
             {s.locations?.length > 0 && (
               <p class="mt-4 font-mono text-xs text-charcoal/40">Tersedia di {s.locations.length} kota</p>
