@@ -84,8 +84,8 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
   {/* SECTION 1: Konten Utama Layanan (Sempit/max-w-3xl agar nyaman dibaca) */}
   <section class="mx-auto max-w-3xl px-4 pt-16 sm:px-6 sm:pt-20">
     {location && (
-      <p class="font-mono text-xs uppercase tracking-widest text-brick">Tersedia di {location.city}</p>
-    )}
+  <p class="font-mono text-xs uppercase tracking-widest text-brick">Melayani Wilayah {location.city}</p>
+   )}
     <h1 class="mt-2 font-display text-3xl font-semibold text-charcoal sm:text-4xl">
       {location ? `${service.name} ${location.city}` : service.name}
     </h1>
@@ -171,19 +171,6 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
               <summary class="cursor-pointer font-medium text-charcoal">{item.question}</summary>
               <p class="mt-2 text-sm text-charcoal/60">{item.answer}</p>
             </details>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {!location && service.locations && service.locations.length > 0 && (
-      <div class="mt-10 rounded-lg border border-charcoal/10 bg-white/40 p-6">
-        <h2 class="font-display text-lg font-semibold text-charcoal">Tersedia di kota:</h2>
-        <div class="mt-3 flex flex-wrap gap-2">
-          {service.locations.map((loc: any) => (
-            <a href={`/layanan/${loc.slug}`} class="rounded-full border border-charcoal/15 bg-white px-4 py-1.5 text-sm text-charcoal/70 hover:border-brick hover:text-brick">
-              {loc.city}
-            </a>
           ))}
         </div>
       </div>
