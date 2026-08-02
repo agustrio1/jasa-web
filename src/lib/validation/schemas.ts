@@ -25,7 +25,7 @@ const locationInputSchema = z.object({
 const packageInputSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, 'Nama paket wajib diisi').max(100),
-  price: z.string().trim().min(1, 'Harga wajib diisi').max(50),
+  price: z.string().trim().max(50).optional(),
   priceNote: z.string().trim().max(100).optional(),
   features: z.unknown().optional(),
   isPopular: z.boolean().default(false),

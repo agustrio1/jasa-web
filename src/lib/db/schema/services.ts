@@ -32,7 +32,7 @@ export const servicePackages = pgTable('service_packages', {
   id: text('id').primaryKey(),
   serviceId: text('service_id').notNull().references(() => services.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
-  price: text('price').notNull(),
+  price: text('price'),
   priceNote: text('price_note'),
   features: jsonb('features'),
   isPopular: boolean('is_popular').notNull().default(false),

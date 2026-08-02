@@ -1,0 +1,1 @@
+ALTER TABLE "service_packages" ALTER COLUMN "price" DROP NOT NULL;

@@ -141,7 +141,7 @@ export default function ServiceForm({ initial }: Props) {
                 <input value={pkg.name} onChange={(e) => updatePackage(i, 'name', e.target.value)}
                   placeholder="Nama paket (mis. Basic)" className="rounded-md border border-gray-300 px-2 py-1 text-sm" />
                 <input value={pkg.price} onChange={(e) => updatePackage(i, 'price', e.target.value)}
-                  placeholder="Harga (mis. Rp 1.500.000)" className="rounded-md border border-gray-300 px-2 py-1 text-sm" />
+                  placeholder="Harga (kosongkan jika custom/relatif)" className="rounded-md border border-gray-300 px-2 py-1 text-sm" />
               </div>
               <input value={pkg.priceNote} onChange={(e) => updatePackage(i, 'priceNote', e.target.value)}
                 placeholder="Catatan harga (mis. /tahun, opsional)" className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm" />

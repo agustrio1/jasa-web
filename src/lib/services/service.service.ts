@@ -8,7 +8,7 @@ const PER_PAGE = 10;
 type PackageInput = {
   id?: string;
   name: string;
-  price: string;
+  price?: string;
   priceNote?: string;
   features?: unknown;
   isPopular?: boolean;
@@ -131,7 +131,7 @@ export async function createServiceWithLocations(
         id: ulid(),
         serviceId,
         name: pkg.name,
-        price: pkg.price,
+        price: pkg.price || null,
         priceNote: pkg.priceNote,
         features: pkg.features ?? null,
         isPopular: pkg.isPopular ?? false,
@@ -182,7 +182,7 @@ export async function updateServiceWithLocations(
         id: ulid(),
         serviceId,
         name: pkg.name,
-        price: pkg.price,
+        price: pkg.price || null,
         priceNote: pkg.priceNote,
         features: pkg.features ?? null,
         isPopular: pkg.isPopular ?? false,

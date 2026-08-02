@@ -131,10 +131,16 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
             <p class={`font-mono text-xs uppercase tracking-wide ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>{service.name}</p>
             <h3 class={`mt-1 font-display text-lg font-semibold ${pkg.isPopular ? 'text-bone' : 'text-charcoal'}`}>{pkg.name}</h3>
 
-            <p class={`mt-3 text-xs ${pkg.isPopular ? 'text-bone/50' : 'text-charcoal/40'}`}>Mulai dari</p>
-            <p class={`text-2xl font-semibold ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>
-              {pkg.price}
-              {pkg.priceNote && <span class={`ml-1 text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}>{pkg.priceNote}</span>}
+            <p class={`mt-3 text-2xl font-semibold ${pkg.isPopular ? 'text-brass' : 'text-brick'}`}>
+              {pkg.price ? (
+                <>
+                  <span class={`block text-xs font-normal ${pkg.isPopular ? 'text-bone/50' : 'text-charcoal/40'}`}>Mulai dari</span>
+                  {pkg.price}
+                  {pkg.priceNote && <span class={`ml-1 text-sm font-normal ${pkg.isPopular ? 'text-bone/60' : 'text-charcoal/50'}`}>{pkg.priceNote}</span>}
+                </>
+              ) : (
+                <span class="text-lg">Hubungi Kami</span>
+              )}
             </p>
 
             {pkg.featuresHtml && (
